@@ -1,0 +1,604 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype}
+\usepackage{booktabs,tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,
+  citecolor=blue!55!black,urlcolor=blue!55!black]{hyperref}
+
+
+\setlist[itemize]{topsep=2pt,itemsep=2pt}
+
+\numberwithin{equation}{section}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\cO}{\mathcal O}
+\newcommand{\cZ}{\mathcal Z}
+\newcommand{\Rcnt}{\mathsf R}
+\newcommand{\Mcnt}{\mathsf M}
+\newcommand{\avgdeg}{\overline d}
+
+\title{A detailed version of the recent proof of the Erd\H{o}s--S\'os theorem}
+\author{Louis DeBiasio}
+\date{September 6, 2026}
+
+\hypersetup{pdfauthor={Louis DeBiasio}, pdftitle={A marked-position proof of the Erdos-Sos theorem}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We give a detailed exposition of the marked-position proof of the
+Erd\H{o}s--S\'os theorem: every graph of average degree greater than $t-2$
+contains every tree on $t$ vertices.  The argument counts permutations
+with an adjacency-marked prefix and bounds the number of states that
+fail to support a prescribed rooted tree.  A shortest-prefix rotation
+joins branches, and a prefix reversal adds a new leaf.  We give both
+injections and their inverse maps explicitly, beginning with the path case.
+\end{abstract}
+
+\section*{Acknowledgments}
+ChatGPT~6 Astra was used to develop, write, and revise this exposition.
+The author's role was minimal, consisting of asking questions while
+trying to understand the recent Erd\H{o}s--S\'os proof.
+The original Erd\H{o}s--S\'os proof and its benchmark provenance are
+recorded in \cite{AdamczewskiBloom2026,Erdos548Repository}.
+
+\section{Introduction}
+
+This paper expounds the marked-position argument in the Lean proof of
+Erd\H{o}s problem~548 produced by GPT-6 Astra in the FrontierMath
+Erd\H{o}s benchmark \cite{AdamczewskiBloom2026,Erdos548Repository}.
+The theorem and the underlying proof are due to that work; the purpose
+here is to present the finite counting argument in conventional
+mathematical form.
+
+All graphs in this note are finite and simple, and a copy need not be
+induced.  We use $t$ for the number of vertices of the target tree.
+
+\begin{theorem}[Erd\H{o}s--S\'os]\label{thm:ES}
+Let $T$ be a tree on $t\geq 2$ vertices and let $G$ be a graph on $n$
+vertices.  If $G$ contains no copy of $T$, then
+\[
+        e(G)\leq \frac{(t-2)n}{2}.
+\]
+Equivalently, every graph of average degree greater than $t-2$ contains a
+copy of every tree on $t$ vertices.
+\end{theorem}
+
+The bound is sharp.  A disjoint union of copies of $K_{t-1}$ has average
+degree $t-2$ and has no connected subgraph on $t$ vertices.  The star gives a
+second obstruction: a $(t-2)$-regular graph contains no copy of
+$K_{1,t-1}$.
+
+If minimum degree were greater than $t-2$, the result would be immediate:
+root $T$ anywhere and embed one new leaf at a time.  Average degree is much
+less cooperative.  Deleting low-degree vertices guarantees only a nonempty
+subgraph of minimum degree at least roughly half the average degree, losing
+the factor of two that matters here.  Much of the earlier literature is
+devoted to recovering that loss by understanding the structure of the host
+graph or of the target tree.
+
+The new proof never constructs a single embedding greedily.  Instead, it
+runs a rooted embedding test simultaneously through every ordering of
+$V(G)$ and amortizes the possible failures exactly.
+
+\section{A warm-up: the Erd\H{o}s--Gallai path theorem}
+\label{sec:path-warmup}
+
+For paths, the counting argument uses only prefix reversal.  We give
+this case first to illustrate the method without the additional operation
+needed to join branches.
+
+\begin{theorem}[Erd\H{o}s--Gallai \cite{ErdosGallai1959}]
+\label{thm:EG-path}
+Let $t\geq2$.  If an $n$-vertex graph $G$ contains no path on $t$
+vertices, then
+\[
+        e(G)\leq\frac{(t-2)n}{2}.
+\]
+\end{theorem}
+
+\begin{proof}
+The case $n=0$ is immediate, so assume $n\geq1$.
+For $j\geq2$, let $A_j$ count the pairs $(\pi,i)$ such that
+$\pi=(v_1,\ldots,v_n)$ is an ordering of $V(G)$, $2\leq i\leq n$,
+$v_1v_i\in E(G)$, and the prefix $\{v_1,\ldots,v_i\}$ contains a
+path on $j$ vertices with endpoint $v_1$.  Every pair satisfying the
+adjacency condition supplies a two-vertex path.  Thus
+\[
+        A_2=\sum_{x\in V(G)}d_G(x)(n-1)!=2e(G)(n-1)!.
+\]
+We claim that
+\begin{equation}
+        A_j\leq A_{j+1}+n!\qquad(j\geq2).
+        \label{eq:path-warmup-step}
+\end{equation}
+
+For each ordering that contributes to $A_j$, discard its first counted
+pair $(\pi,i_0)$.  There are at most $n!$ discarded pairs.  For every
+remaining pair $(\pi,i)$, we have $i>i_0$, so the earlier prefix
+contains a $j$-vertex path with endpoint $v_1$ that avoids $v_i$.
+The edge $v_iv_1$ extends this to a $(j+1)$-vertex path with endpoint
+$v_i$.  Reverse the prefix through position $i$:
+\[
+ (\pi,i)\longmapsto
+ \bigl((v_i,v_{i-1},\ldots,v_1,v_{i+1},\ldots,v_n),i\bigr).
+\]
+The image is counted by $A_{j+1}$: its first vertex is $v_i$, its
+marking edge is still $v_iv_1$, and its prefix has the same vertex set.
+This map is injective, since the index $i$ is retained and reversing
+the prefix again recovers the original ordering.  This proves
+\eqref{eq:path-warmup-step}.
+
+Iterating from $j=2$ to $j=t-1$ gives
+\[
+        2e(G)(n-1)!=A_2\leq A_t+(t-2)n!.
+\]
+Since $G$ contains no path on $t$ vertices, $A_t=0$.  Dividing by
+$2(n-1)!$ gives the result.
+\end{proof}
+
+The same reversal will extend a rooted tree by a new leaf in
+Lemma~\ref{lem:leaf}.  For a general tree, we also need an injection
+that combines branches at a common root.  We next introduce the notation
+for these two operations.
+
+\section{Set-up}
+
+For the state-counting argument, assume $n\geq1$; the empty host
+satisfies Theorem~\ref{thm:ES} immediately.  Fix an ordering
+\[
+        \pi=(v_1,v_2,\ldots,v_n)
+\]
+of $V(G)$.  For $1\leq i\leq n$, the \emph{position $i$} may be displayed by
+inserting a divider after $v_i$:
+\begin{equation}
+ (v_1,v_2,\ldots,v_i\mid v_{i+1},\ldots,v_n).
+ \label{eq:position-display}
+\end{equation}
+If $i=n$, the right-hand side of the divider is empty.  The vertices to
+the left of the bar form the \emph{prefix at position $i$}.
+
+For $2\leq i\leq n$, call this position \emph{marked} when
+$v_1v_i\in E(G)$.  In other words, the first and last vertices of the prefix
+are adjacent.  The vertical bar carries no graph structure; it merely records
+which prefix is under consideration.  Let
+\[
+ \cO_G=\{(\pi,i):\pi\text{ is an ordering of }V(G),\ 2\leq i\leq n,
+                         \ v_1v_i\in E(G)\}.
+\]
+Write $\Mcnt(G)=|\cO_G|$.
+
+\begin{proposition}\label{prop:M}
+For every graph $G$ on $n\geq1$ vertices,
+\[
+        \Mcnt(G)=2e(G)(n-1)!.
+\]
+Consequently $\Mcnt(G)/n!=\avgdeg(G)$, the average degree of $G$.
+\end{proposition}
+
+\begin{proof}
+If the first vertex is $x$, each of the $(n-1)!$ orderings of the remaining
+vertices has exactly $d_G(x)$ marked positions.  Sum over $x$ and use the
+handshaking lemma.
+\end{proof}
+
+Now let $(H,h)$ be a rooted graph.  A marked state $(\pi,i)$ \emph{supports}
+$(H,h)$ if the set
+\[
+        \{v_1,v_2,\ldots,v_i\}
+\]
+contains a copy of $H$ in which $h$ is mapped to $v_1$.  Define
+\[
+ \cO_G(H,h)=\{(\pi,i)\in\cO_G:(\pi,i)\text{ supports }(H,h)\}.
+\]
+The host graph will always be clear, so from now on we abbreviate
+$\cO_G(H,h)$ to $\cO(H,h)$.
+
+\begin{example}[Supportive and failed states]\label{ex:marked}
+Let $G$ be the graph with
+\[
+        V(G)=\{a,b,c,d,e\}
+\]
+and edge set
+\[
+        ac,\quad ae,\quad ad,\quad eb
+\]
+and consider
+\[
+        \pi=(a,c,e,b,d).
+\]
+The positions after $c,e,d$ are marked, because these vertices are adjacent
+to the first vertex $a$; the position after $b$ is not marked.  Thus the
+four positions behave as follows:
+\[
+\begin{array}{ccl}
+ (a,c\mid e,b,d)     &:& \text{marked, but its prefix has only one edge},\\
+ (a,c,e\mid b,d)     &:& \text{marked, and contains the path $c-a-e$},\\
+ (a,c,e,b\mid d)     &:& \text{unmarked, and contains the path $a-e-b$},\\
+ (a,c,e,b,d\mid)     &:& \text{marked, and contains the path $a-e-b$}.
+\end{array}
+\]
+Let $H$ be a three-vertex path rooted at an endpoint.  The position after $e$
+does not support $(H,h)$: its prefix contains a copy of $H$, but in that
+copy the first vertex $a$ is the middle of the path rather than the image of
+the root.  The position after $b$ contains the correctly rooted path
+$a-e-b$, but is not marked.  Only the final position is both marked and
+supportive.
+Thus this ordering contributes three states to $\Mcnt(G)$ and one state to
+$|\cO(H,h)|$.
+\end{example}
+
+\begin{remark}[Why the marked edge need not be used]
+The mark and the rooted copy play deliberately different roles.  In the
+final state of Example~\ref{ex:marked}, the edge $ad$ certifies that the
+position is marked, while the rooted path is $a-e-b$; the edge $ad$ is not
+part of that path.  A state should therefore be viewed as carrying two
+pieces of information:
+\begin{itemize}
+\item the prefix has already made a rooted copy of the target available;
+\item the last vertex of the prefix supplies one neighbour-token at the
+      root.
+\end{itemize}
+The second item is what connects the permutation count to density.  For a
+fixed ordering with first vertex $x$, there is exactly one marked position for
+each neighbour of $x$, so the number of marked positions is $d_G(x)$.  If
+every position $2,\ldots,n$ were counted instead, every ordering would
+contribute $n-1$ states, independently of the edges of $G$, and the count
+would contain no average-degree information.
+
+The unused marking edge is also useful in the injections.  In the leaf move,
+the vertex at a later marked position can be attached to an earlier rooted
+copy as the new leaf.  In the branch rotation, the same edge remains the
+anchor that makes the new position marked.  Thus the proof does not assert
+that every marking edge belongs to the copy being counted; it uses marked
+edges as transferable opportunities and counts those occurring after a
+rooted copy has become available in $|\cO(H,h)|$.
+\end{remark}
+
+The heart of the proof is the following stronger, rooted statement.
+
+\begin{theorem}[Master inequality]\label{thm:master}
+Let $(T,r)$ be any rooted tree on $t\geq2$ vertices.  For every host graph
+$G$ on $n\geq1$ vertices,
+\begin{equation}
+        \Mcnt(G)\leq|\cO(T,r)|+(t-2)n!.
+        \tag{MI}\label{eq:MI}
+\end{equation}
+Equivalently,
+\[
+        \avgdeg(G)\leq\frac{|\cO(T,r)|}{n!}+t-2.
+\]
+\end{theorem}
+
+If $G$ is $T$-free, then $\cO(T,r)=\varnothing$.  Proposition~\ref{prop:M} and
+\eqref{eq:MI} immediately give Theorem~\ref{thm:ES}.  Everything therefore
+reduces to proving the master inequality.
+
+The term $|\cO(T,r)|/n!$ is the expected number of marked positions, in a
+uniformly random ordering, whose prefixes contain a copy of $T$ rooted at
+the first vertex.  The marking edge need not belong to that copy.  Therefore
+\[
+        \frac{\Mcnt(G)-|\cO(T,r)|}{n!}
+\]
+is the expected number of marked positions whose prefixes do not contain
+such a rooted copy.  The master inequality says that this expectation is at
+most $t-2$.
+
+\section{The two injections}\label{sec:injections}
+
+\subsection{Joining two branches by rotating a word}
+
+\begin{lemma}[Branch gluing]\label{lem:branch}
+Let $G$ be an $n$-vertex graph.  Suppose $T_1$ and $T_2$ are rooted
+subtrees of a tree $T$, all rooted at $r$, such that
+\[
+ T_1\cup T_2=T,\qquad V(T_1)\cap V(T_2)=\{r\},
+\]
+where the union is taken as subgraphs of $T$.  Then
+\[
+ |\cO(T_1,r)|+|\cO(T_2,r)|
+ \leq \Mcnt(G)+n!+|\cO(T,r)|.
+\]
+\end{lemma}
+
+\begin{proof}
+For the rotation it is convenient to adjoin the root-only state to every
+ordering:
+\[
+        \cZ=\{(\pi,1):\pi\text{ is an ordering of }V(G)\}.
+\]
+Thus $|\cZ|=n!$.  A root-only state is a bookkeeping device, not a marked
+state.
+
+We define an injection
+\begin{equation}
+ \Phi:\cO(T_1,r)\setminus\cO(T,r)
+ \longrightarrow
+ \bigl(\cO_G\setminus\cO(T_2,r)\bigr)\cup\cZ.
+ \label{eq:branch-injection}
+\end{equation}
+
+Take $(\pi,i)$ in the domain.  Because it supports $T_1$, there is a first
+marked position $a\leq i$ whose prefix supports $T_1$.
+Divide the entries of $\pi$ following $v_1$ into three consecutive blocks:
+\[
+ \pi=(v_1,A,B,C),
+ \qquad
+ A=(v_2,\ldots,v_a),
+ \quad B=(v_{a+1},\ldots,v_i),
+ \quad C=(v_{i+1},\ldots,v_n).
+\]
+Here the commas denote concatenation of blocks; they are not dividers.  The
+original state has index $i$, so its divider appears after the block $B$.
+
+Let $b=1+|B|=i-a+1$, and form a new ordering by interchanging the
+consecutive blocks $A$ and $B$:
+\[
+        \rho=(v_1,B,A,C).
+\]
+Define
+\begin{equation}
+        \Phi(\pi,i)=(\rho,b).
+ \label{eq:rotation}
+\end{equation}
+Thus the image uses position $b$, whose divider lies immediately after $B$;
+its prefix is
+$v_1$ followed by the entries of $B$.  If $B$ is empty, then $b=1$ and the
+image lies in $\cZ$.  Otherwise the vertex at the new position is the last
+vertex of $B$, namely $v_i$.  Hence position $b$ is marked, because the
+source position $i$ was marked and $v_1v_i\in E(G)$.
+
+The new prefix, consisting of $v_1$ and the entries of $B$, cannot support
+$T_2$.  Indeed, $v_1$ together with the entries of $A$ contains a rooted
+copy of $T_1$.  A rooted copy of $T_2$ using only $v_1$ and the entries of
+$B$ would be disjoint from it except at $v_1$; the two copies could
+therefore be joined at their common root to give a copy of $T$ in the
+original prefix, which consists of $v_1,A,B$.  This contradicts the fact
+that $(\pi,i)$ does not support $T$.  Thus $\Phi(\pi,i)$ belongs to the
+stated codomain.
+
+It remains to show that $\Phi$ is injective.  Given an image $(\rho,b)$,
+the block $B$ is already known: it consists of the $b-1$ entries following
+the first vertex.  Starting immediately to the right of the divider, let $A'$
+be the shortest nonempty block such that
+\begin{enumerate}[label=(\roman*),leftmargin=2.3em]
+\item the last vertex of $A'$ is adjacent to the first vertex of $\rho$;
+      and
+\item $A'$ together with the first vertex supports rooted $T_1$.
+\end{enumerate}
+The original block $A$ has these properties.  No proper initial subblock of
+$A$ can have them, because it would have produced an earlier marked position
+supporting $T_1$ in the original ordering, contrary to the choice of $a$.
+Hence $A'=A$.  We can therefore recover
+\[
+        \pi=(v_1,A,B,C),\qquad i=1+|A|+|B|,
+\]
+so $\Phi$ is injective.
+
+Its codomain has size $\Mcnt(G)-|\cO(T_2,r)|+n!$.  Since every state
+supporting $T$ also supports $T_1$, the domain has size
+$|\cO(T_1,r)|-|\cO(T,r)|$.  Therefore
+\[
+ |\cO(T_1,r)|-|\cO(T,r)|
+ \leq \Mcnt(G)-|\cO(T_2,r)|+n!,
+\]
+which is the claimed inequality.
+\end{proof}
+
+\begin{example}[A branch rotation]\label{ex:rotation}
+Let $T_1$ be a single edge rooted at one endpoint, and let $T_2$ be a
+two-edge path rooted at an endpoint.  Their union at the root is a
+four-vertex path rooted at an internal vertex.  Consider the fragment
+\[
+        \pi=(o,a,x,y,\ldots),
+        \qquad A=(a),\quad B=(x,y),
+\]
+where the state uses the divider after $y$.  Suppose
+that, among the displayed vertices, the only edges are $oa$ and $oy$.  The block $A$ together with $o$ already supports $T_1$, while the
+prefix through $y$ does not support $T$: neither $x$ nor $y$ continues to a
+second edge.
+
+Here the state uses position $i=4$, since four vertices lie to the left of
+the divider, and the first supporting position is $a=2$.  Thus
+$b=1+|B|=3$.  The map $\Phi$ interchanges $A$ and $B$, producing
+\[
+        \rho=(o,x,y,a,\ldots)
+\]
+with marked position $3$, again immediately after $y$.  It is marked
+because $oy$ is an edge, but its prefix $o,x,y$ does not support $T_2$.
+To invert the move, scan to the right of the divider; the shortest block ending
+at a neighbour of $o$ and supporting rooted $T_1$ together with $o$ is
+precisely $A=(a)$.
+\end{example}
+
+\subsection{Moving the root across a new leaf}
+
+\begin{lemma}[Leaf move]\label{lem:leaf}
+Let $G$ be an $n$-vertex graph and let $(S,p)$ be a rooted tree.  Form $T$
+by adding a new leaf $\ell$ adjacent to $p$, and root the larger tree at
+$\ell$.  Then
+\[
+        |\cO(S,p)|\leq|\cO(T,\ell)|+n!.
+\]
+\end{lemma}
+
+\begin{proof}
+Let
+\[
+        \cZ=\{(\pi,1):\pi\text{ is an ordering of }V(G)\}
+\]
+be the set of root-only states.  We define an injection
+\[
+        \Psi:\cO(S,p)\longrightarrow \cO(T,\ell)\cup\cZ.
+\]
+
+Fix an ordering $\pi$.  If $\pi$ contributes any states to $\cO(S,p)$,
+let $i_0$ be the smallest index for which $(\pi,i_0)\in\cO(S,p)$, and set
+\[
+        \Psi(\pi,i_0)=(\pi,1)\in\cZ.
+\]
+Thus the first supporting state belonging to each ordering is sent to that
+ordering's unique root-only state.
+
+Now take any other state $(\pi,i)\in\cO(S,p)$.  Since it is not the first
+such state for $\pi$, we have $i_0<i$.  In particular, position $i_0$ is an
+earlier marked position whose prefix supports a copy of $S$ rooted at $v_1$.
+The endpoint $v_i$ of the current prefix is adjacent to $v_1$, and it is
+not used by the earlier
+copy of $S$.  Thus adjoining $v_i$ to $v_1$ creates a copy of $T$ in which
+the new root $\ell$ is represented by $v_i$.
+
+Reverse the prefix through $v_i$, leaving the rest of the ordering fixed:
+\begin{equation}
+ \rho=(v_i,v_{i-1},\ldots,v_2,v_1,
+               v_{i+1},\ldots,v_n),
+ \qquad
+ \Psi(\pi,i)=(\rho,i).
+\label{eq:reversal}
+\end{equation}
+The image uses the same position $i$.  Its new first vertex is $v_i$ and its
+last vertex is $v_1$, so it is marked.  Its prefix has exactly the same
+vertex set as the original prefix; it therefore contains the earlier copy
+of $S$ together with the edge $v_iv_1$.  Hence $\Psi(\pi,i)$ supports
+$(T,\ell)$.
+
+For each fixed $i$, the map reverses the first $i$ entries and is therefore
+an involution.  Since the position index is part of the state, images with
+different $i$ cannot collide.  These images lie in $\cO(T,\ell)$, whereas
+the exceptional images lie in $\cZ$; and the latter are distinct because
+they retain their orderings.  Thus $\Psi$ is injective.  Since
+$|\cZ|=n!$, we obtain
+\[
+        |\cO(S,p)|\leq|\cO(T,\ell)|+n!,
+\]
+as claimed.
+\end{proof}
+
+\begin{example}[The leaf involution]\label{ex:leaf}
+Let $S$ be an edge rooted at $p$, and let $T$ be the three-vertex path
+$\ell-p-q$, rooted at the new leaf $\ell$.  Consider
+\[
+        \pi=(b,u,x,c,d)
+\]
+with edges $bu$ and $bc$.  The position after $u$ is the first marked
+position supporting $S$, so it is sent to the root-only state associated
+with this ordering.  Now consider the later state
+$(\pi,4)$, whose position is displayed as
+\[
+        (b,u,x,c\mid d).
+\]
+The index is $4$ because four vertices lie to the left of the divider (in
+particular, $c=v_4$).  This state also supports $S$.  Using $b-u$ as the
+earlier copy,
+attach $c$ to $b$ and reverse the prefix through $c$.  Thus
+\[
+        \rho=(c,x,u,b,d),
+        \qquad
+        \Psi(\pi,4)=(\rho,4),
+\]
+and the image position is displayed as
+\[
+        (c,x,u,b\mid d).
+\]
+Its prefix contains the path $c-b-u$, rooted at its first vertex $c$, and
+the position is marked because its first and last vertices, $c$ and $b$, are
+adjacent.
+\end{example}
+
+\section{The main inductive proof}
+
+We now prove Theorem~\ref{thm:master}.  The two injections account for the constant $t-2$ in the induction.
+
+\begin{proof}[Proof of Theorem~\ref{thm:master}]
+We induct on $t=|V(T)|$, uniformly in the host graph and in the chosen root.
+
+If $t=2$, then $T$ is an edge.  Every marked position itself exhibits a rooted
+copy of that edge, so $\Mcnt(G)\leq|\cO(T,r)|$.  This is \eqref{eq:MI} with
+no error term.
+
+Suppose $t\geq3$ and first assume that $r$ is a leaf.  Let $p$ be its
+neighbour, and root $S=T-r$ at $p$.  By induction and Lemma~\ref{lem:leaf},
+\[
+\begin{aligned}
+ \Mcnt(G)\leq |\cO(S,p)|+(t-3)n!\leq |\cO(T,r)|+(t-2)n!.
+\end{aligned}
+\]
+
+It remains to treat the case $d_T(r)\geq2$.  Choose a neighbour $s$ of $r$
+and another neighbour $z\neq s$.  Delete the edge $rs$, and let $A$ be the
+component containing $r$.  Define
+\[
+        T_1=T[A],\qquad
+        T_2=T[(V(T)\setminus A)\cup\{r\}],
+\]
+both rooted at $r$.  Both trees have at least two vertices and are smaller
+than $T$.  They satisfy the hypotheses of Lemma~\ref{lem:branch}.  If
+$t_j=|V(T_j)|$, then the common root is counted twice, so
+\[
+        t_1+t_2=t+1.
+\]
+Induction gives
+\[
+\begin{aligned}
+ \Mcnt(G)&\leq |\cO(T_1,r)|+(t_1-2)n!,\\
+ \Mcnt(G)&\leq |\cO(T_2,r)|+(t_2-2)n!.
+\end{aligned}
+\]
+After addition,
+\[
+ 2\Mcnt(G)\leq
+ |\cO(T_1,r)|+|\cO(T_2,r)|+(t-3)n!.
+\]
+Lemma~\ref{lem:branch} now yields
+\[
+        2\Mcnt(G)\leq\Mcnt(G)+|\cO(T,r)|+(t-2)n!,
+\]
+and subtracting $\Mcnt(G)$ proves \eqref{eq:MI}.
+\end{proof}
+
+Combining this with Proposition~\ref{prop:M} completes the proof of
+Theorem~\ref{thm:ES}.  In the customary notation, if $T$ has $k+1$
+vertices and
+\[
+        e(G)>\frac{k-1}{2}n,
+\]
+then $G$ contains a copy of $T$; equivalently, since $e(G)$ is integral, it
+suffices that
+\[
+        e(G)\geq \left\lfloor\frac{(k-1)n}{2}\right\rfloor+1.
+\]
+
+
+\begin{thebibliography}{99}
+
+\bibitem{AdamczewskiBloom2026}
+T.~Adamczewski and T.~F. Bloom,
+\emph{FrontierMath Erd\H{o}s}, Epoch AI, 2026.
+See in particular Appendix~B.4 and the accompanying FrontierMath Erd\H{o}s
+benchmark materials, \url{https://epoch.ai/files/frontiermath-erdos.pdf}.
+
+\bibitem{ErdosGallai1959}
+P.~Erd\H{o}s and T.~Gallai,
+\emph{On maximal paths and circuits of graphs},
+Acta Math. Acad. Sci. Hungar. \textbf{10} (1959), 337--356.
+
+\bibitem{Erdos548Repository}
+T.~Adamczewski,
+\emph{Erd\H{o}s problem \#548: Lean proof and provenance}, 2026.
+\url{https://github.com/tadamcz/erdos548}.
+
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "Please cite the relevant paper by title; this file describes the collection. Papers: CC BY 4.0. Code: MIT. See LICENSE.md for scope."
+type: software
+title: "Tree embeddings in graphs, hypergraphs, and digraphs: papers and Lean proofs"
+authors:
+  - family-names: DeBiasio
+    given-names: Louis
+version: "2026-09-06"
+keywords:
+  - extremal graph theory
+  - tight trees
+  - antidirected trees
+  - Lean

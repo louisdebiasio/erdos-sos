@@ -1,0 +1,50 @@
+name: Verify papers and proofs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: hypergraphs
+            directory: Hypergraphs/lean
+          - project: digraphs
+            directory: Digraphs/lean
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: ${{ matrix.directory }}
+          auto-config: "false"
+          use-github-cache: "false"
+      - name: Clean build and transitive axiom audit
+        run: python3 scripts/check_lean.py --project ${{ matrix.project }} --clean
+
+  papers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install TeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-extra texlive-fonts-recommended
+      - name: Compile papers and check references and layout diagnostics
+        run: python3 scripts/build_papers.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: papers
+          path: |
+            Graphs/erdos_sos.pdf
+            Hypergraphs/kalai_hypergraphs.pdf
+            Digraphs/antidirected_trees.pdf

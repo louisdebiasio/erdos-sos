@@ -1,0 +1,23 @@
+# Local build products
+.build/
+**/.lake/
+__pycache__/
+*.pyc
+
+# TeX intermediates (the three PDFs are intentionally retained)
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# Editor and operating-system files
+.DS_Store
+*~
+*.swp

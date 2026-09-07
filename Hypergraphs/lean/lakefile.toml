@@ -1,0 +1,24 @@
+name = "kalai"
+version = "0.1.0"
+defaultTargets = ["Statements", "Kalai", "KalaiTests", "LeafTests", "CountingTests", "NormalizationTests", "GlobalTests"]
+
+[[lean_lib]]
+name = "Kalai"
+
+[[lean_lib]]
+name = "KalaiTests"
+
+[[lean_lib]]
+name = "LeafTests"
+
+[[lean_lib]]
+name = "CountingTests"
+
+[[lean_lib]]
+name = "NormalizationTests"
+
+[[lean_lib]]
+name = "GlobalTests"
+
+[[lean_lib]]
+name = "Statements"

@@ -1,0 +1,519 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,
+  citecolor=blue!55!black,urlcolor=blue!55!black]{hyperref}
+\numberwithin{equation}{section}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\cO}{\mathcal O}
+\newcommand{\cZ}{\mathcal Z}
+
+\title{An Erd\H{o}s--S\'os-type theorem for antidirected trees}
+\author{Louis DeBiasio}
+\date{September 6, 2026}
+\hypersetup{pdfauthor={Louis DeBiasio}, pdftitle={An Erd\H{o}s--S\'os theorem for antidirected trees}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We prove that every digraph $D$ with more than $(t-2)|V(D)|$ arcs contains
+every antidirected tree on $t\geq2$ vertices, establishing the conjecture of
+Addario-Berry, Havet, Linhares Sales, Reed, and Thomass\'e.  The proof
+adapts the permutation-counting argument of the recent Erd\H{o}s--S\'os
+proof obtained in the FrontierMath Erd\H{o}s benchmark.  The result
+also gives Sumner's tournament bound for antidirected trees.
+An accompanying Lean~4 formalization proves the density theorem.
+\end{abstract}
+
+\section*{Acknowledgments}
+ChatGPT~6 Astra was used to develop the argument, write the exposition,
+and produce the accompanying Lean formalization.  The author's role
+was minimal, consisting mostly of asking questions towards trying to understand
+the recent Erd\H{o}s--S\'os proof and its possible extensions.
+
+\section{Introduction}
+\label{sec:introduction}
+
+An \emph{oriented tree} is obtained by assigning a direction to every
+edge of a tree.  It is \emph{antidirected} if every vertex is a source
+or a sink; equivalently, no vertex has both positive indegree and
+positive outdegree.  We prove an analogue of the Erd\H{o}s--S\'os
+theorem for these trees in digraphs.
+
+Throughout the paper, a digraph is finite and loopless, but it may
+contain both opposite arcs between a pair of vertices.  There is at most
+one arc in each ordered direction.  Copies are injective and need not be
+induced, and every target tree has $t\geq2$ vertices.  We write $e(D)$ for
+the number of arcs of $D$.
+
+We prove the following density statement, conjectured
+by Addario-Berry, Havet, Linhares Sales, Reed, and Thomass\'e in 2013
+\cite{AddarioBerryHavetLinharesSalesReedThomasse2013}.
+
+\begin{theorem}
+\label{thm:antidirected-density}
+Let $T$ be an antidirected tree on $t\geq2$ vertices.  Every digraph $D$ satisfying
+\[
+        e(D)>(t-2)|V(D)|
+\]
+contains a copy of $T$.
+\end{theorem}
+
+\subsection{Related work}
+
+Several special cases were known.  Addario-Berry et al. proved the
+conjecture for antidirected trees of diameter at most three
+\cite{AddarioBerryHavetLinharesSalesReedThomasse2013}.  Stein and
+Trujillo-Negrete later proved it for every antidirected caterpillar, and for
+every antidirected tree when the host excludes three specified orientations
+of $K_{2,\lceil (t-1)/12\rceil}$
+\cite{SteinTrujilloNegrete2025}.  Stein and Z\'arate-Guer\'en also obtained
+an asymptotic version for balanced antidirected trees of bounded maximum
+degree and linear order in large oriented graphs
+\cite{SteinZarateGueren2024}.
+
+\subsection{Connection with the Erd\H{o}s--S\'os proof}
+
+Our proof is based on the new proof of the Erd\H{o}s--S\'os conjecture
+obtained in the FrontierMath Erd\H{o}s benchmark and recorded in
+\cite{Erdos548Repository}.\footnote{The repository is maintained by
+Tom Adamczewski.  Its provenance account credits the graph proof to
+GPT-6 Astra, working autonomously in the FrontierMath Erd\H{o}s
+benchmark of Adamczewski and Bloom.}
+We adapt its counting of marked vertex permutations and induction on
+rooted trees; we do not claim an independent origin for this method.
+The directed argument distinguishes arcs leaving the first vertex of
+a permutation from arcs entering it.  We check that the two operations
+in the graph proof, adding a leaf and joining branches at a root,
+respect the required arc directions.  The graph theorem itself is not
+used as a black box.
+
+Conversely, our theorem includes the Erd\H{o}s--S\'os assertion for
+graphs as a special case.  Given a
+graph $G$, form the symmetric digraph $\overleftrightarrow{G}$ by replacing
+each edge with its two opposite orientations.  Given a tree $U$, choose its
+bipartition and orient every edge from one class to the other, obtaining an
+antidirected tree $T$.  Then
+\[
+ e(\overleftrightarrow{G})=2e(G),
+ \qquad
+ \overleftrightarrow{G}\text{ contains }T
+ \quad\Longleftrightarrow\quad
+ G\text{ contains }U.
+\]
+Thus Theorem~\ref{thm:antidirected-density}, applied to
+$\overleftrightarrow{G}$, specializes precisely to the Erd\H{o}s--S\'os
+assertion that $2e(G)>(t-2)|V(G)|$ forces a copy of $U$.
+
+\subsection{Outline of the proof}
+
+For each permutation $(v_1,\ldots,v_N)$ of the host vertices, we mark
+position $i\geq2$ according to whether $v_1\to v_i$ or $v_i\to v_1$.
+We count pairs consisting of a permutation and a marked position for
+which the first $i$ vertices contain a copy of the target tree, with
+its root mapped to $v_1$.  Each pair is counted once, regardless of
+how many such copies it contains.
+
+The induction has two cases.  If the root is a leaf, we start with a
+copy of the smaller tree lying before the current marked position.
+The vertex at that position is then available for the new leaf.
+If the root is not a leaf, we split the tree into two smaller trees
+meeting only at the root.  Reordering the permutation gives a counting
+inequality in which the two copies use disjoint vertices outside that
+root.  The direction of the marking arc is unchanged when branches
+are joined, and is reversed relative to the root when a leaf becomes
+the new root.  In an antidirected tree, neighbors have opposite roles
+as sources and sinks, while branches at a vertex share the same role.
+These facts allow the induction to proceed.
+
+Section~\ref{sec:marks} defines the marked pairs and computes their
+number.  Section~\ref{sec:signed-injections} proves the two counting
+inequalities, and Section~\ref{sec:density-proof} completes the
+induction.  The tournament consequence and the Lean formalization
+are given in Sections~\ref{sec:tournaments} and~\ref{sec:lean}.
+
+\section{Marked permutations}
+\label{sec:marks}
+
+Let $D$ be a digraph on $N\geq1$ vertices, and let
+\[
+        \pi=(v_1,v_2,\ldots,v_N)
+\]
+be an ordering of its vertices.  A position $i\geq2$ is \emph{positive} if
+$v_1\to v_i$ and \emph{negative} if $v_i\to v_1$.  Write
+\[
+\begin{aligned}
+ \cO_D^+
+   &=\{(\pi,i):2\leq i\leq N,\ v_1\to v_i\},\\
+ \cO_D^-
+   &=\{(\pi,i):2\leq i\leq N,\ v_i\to v_1\},
+\end{aligned}
+\]
+and put $M^+=|\cO_D^+|$ and $M^-=|\cO_D^-|$.
+A position may have both signs when both opposite arcs are present, and it
+has neither sign when the two vertices are nonadjacent.
+
+\begin{proposition}[Basic counts]
+\label{prop:digraph-normalization}
+For every digraph $D$ on $N\geq1$ vertices,
+\begin{equation}
+        M^+=M^-=e(D)(N-1)!.
+        \label{eq:digraph-normalization}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+If the first vertex is $x$, every ordering of the remaining vertices has
+$d_D^+(x)$ positive positions.  Hence
+\[
+ M^+=(N-1)!\sum_{x\in V(D)}d_D^+(x)
+     =e(D)(N-1)!.
+\]
+The negative count is identical, using indegrees instead of outdegrees.
+\end{proof}
+
+For a pair $(\pi,i)$, its \emph{prefix} is the vertex set
+$\{v_1,\ldots,v_i\}$.  Let $(H,h)$ be a rooted oriented graph.
+For $\varepsilon\in\{+,-\}$, define $\cO_D^\varepsilon(H,h)$ to be
+the set of pairs in $\cO_D^\varepsilon$ whose prefix contains a copy
+of $H$ mapping $h$ to $v_1$.  We say that such a pair \emph{supports}
+$(H,h)$.  The copy need not follow the order of the permutation,
+and each pair is counted only once.  When the host is fixed, we write
+$\cO^\varepsilon(H,h)$.  The notation $-\varepsilon$ denotes the sign
+opposite to $\varepsilon$.
+
+\section{Joining copies and adding a leaf}
+\label{sec:signed-injections}
+
+We first compare the counts for two trees that meet at a single root.
+This step does not require the trees to be antidirected.  That
+assumption enters when we use both counting inequalities in the induction.
+
+\begin{lemma}[Joining at a root]
+\label{lem:signed-branch}
+Let $T_1$ and $T_2$ be rooted oriented subtrees of an oriented tree $T$,
+all rooted at $r$, such that
+\[
+ T_1\cup T_2=T,
+ \qquad
+ V(T_1)\cap V(T_2)=\{r\}.
+\]
+Then, for either sign $\varepsilon$,
+\begin{equation}
+ |\cO^\varepsilon(T_1,r)|+|\cO^\varepsilon(T_2,r)|
+ \leq M^\varepsilon+N!+|\cO^\varepsilon(T,r)|.
+ \label{eq:signed-branch}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+We also allow the pairs
+\[
+ \cZ=\{(\pi,1):\pi\text{ is an ordering of }V(D)\},
+ \qquad |\cZ|=N!.
+\]
+We construct an injection
+\[
+ \cO^\varepsilon(T_1,r)\setminus\cO^\varepsilon(T,r)
+ \longrightarrow
+ \bigl(\cO_D^\varepsilon\setminus\cO^\varepsilon(T_2,r)\bigr)
+ \cup\cZ.
+\]
+Take a pair $(\pi,i)$ in the domain and let $a\leq i$ be its first
+position of sign $\varepsilon$ supporting $(T_1,r)$.  Write
+\[
+ \pi=(x,A,B,C),\qquad
+ A=(v_2,\ldots,v_a),\quad B=(v_{a+1},\ldots,v_i),\quad x=v_1.
+\]
+Here $A,B,C$ are consecutive lists of vertices; the original prefix
+ends after $B$.  Set $b=1+|B|$ and send the pair to
+\begin{equation}
+ ((x,A,B,C),i)\longmapsto ((x,B,A,C),b).
+ \label{eq:signed-rotation}
+\end{equation}
+If $B$ is empty, the image belongs to $\cZ$.  Otherwise its first
+vertex is still $x$ and the last vertex of its prefix is still $v_i$,
+so its marking arc has the same sign $\varepsilon$.
+
+The vertices in $x,A$ support a copy of $T_1$ rooted at $x$.
+If the image prefix $x,B$ supported $T_2$ rooted at $x$, the two
+copies would be disjoint outside $x$ and could be joined to embed
+$T$ in the original prefix.  This contradicts the source condition.
+Thus the image belongs to the stated set.
+
+For the inverse, read $B$ from the image prefix after $x$.  Starting
+immediately after that prefix, recover $A$ as the shortest nonempty
+initial list whose last vertex supplies a mark of sign $\varepsilon$
+at $x$ and which, together with $x$, supports $T_1$ rooted at $x$.
+The original $A$ satisfies these conditions, and no proper initial
+segment does, by the minimality of $a$.  This test does not include
+$B$.  The remaining entries are $C$, and the original index is
+$i=1+|A|+|B|$.  This also recovers the source when $b=1$.
+The map is therefore injective.  Since support of $T$ implies support
+of $T_1$, taking cardinalities yields
+\[
+ |\cO^\varepsilon(T_1,r)|-|\cO^\varepsilon(T,r)|
+ \leq M^\varepsilon-|\cO^\varepsilon(T_2,r)|+N!,
+\]
+which is \eqref{eq:signed-branch}.
+\end{proof}
+
+We next add a leaf and make it the new root.  Reversing the prefix
+interchanges the first and marked vertices.  The marking arc itself
+does not change, but its sign does: an arc entering the old root
+leaves the new root, and conversely.
+
+\begin{lemma}[Adding a leaf]
+\label{lem:signed-leaf}
+Let $(S,p)$ be a rooted oriented tree.  Add a new leaf $\ell$ adjacent to
+$p$, producing $T$, and root $T$ at $\ell$.  Define
+\[
+ \sigma=
+ \begin{cases}
+  +,&\ell\to p,\\
+  -,&p\to\ell.
+ \end{cases}
+\]
+Then
+\begin{equation}
+        |\cO^{-\sigma}(S,p)|
+        \leq |\cO^\sigma(T,\ell)|+N!.
+        \label{eq:signed-leaf}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $\cZ$ again be the $N!$ pairs $(\pi,1)$.  We construct an injection
+\[
+ \Psi:\cO^{-\sigma}(S,p)
+       \longrightarrow \cO^\sigma(T,\ell)\cup\cZ.
+\]
+For each ordering $\pi$, send its first pair in
+$\cO^{-\sigma}(S,p)$, if one exists, to $(\pi,1)\in\cZ$.
+
+For any later pair $(\pi,i)$, an earlier prefix contains $S$ rooted at
+$v_1$, and therefore does not use $v_i$.  Reverse the first $i$ entries:
+\begin{equation}
+ (\pi,i)\longmapsto
+ ((v_i,v_{i-1},\ldots,v_1,v_{i+1},\ldots,v_N),i).
+ \label{eq:signed-reversal}
+\end{equation}
+If $\sigma=+$, then the source is
+negative, so $v_i\to v_1$; this arc represents $\ell\to p$ and is positive
+after the reversal.  If $\sigma=-$, then the source is positive, so
+$v_1\to v_i$; this arc represents $p\to\ell$ and is negative after the
+reversal.  In either case the image supports $(T,\ell)$ and has sign
+$\sigma$.  Prefix reversal is an involution for each fixed $i$, and the
+images in $\cZ$ are distinct from one another and from the images with
+$i\geq2$, so the map is injective.
+\end{proof}
+
+\section{Proof of the directed density theorem}
+\label{sec:density-proof}
+
+For a vertex $r$ of an antidirected tree $T$, put
+\[
+ \sigma_T(r)=
+ \begin{cases}
+  +,&r\text{ is a source},\\
+  -,&r\text{ is a sink}.
+ \end{cases}
+\]
+Adjacent vertices have opposite signs.  If we split a tree into branches
+at a root, the root remains a source in every branch or a sink in every
+branch.  Thus Lemma~\ref{lem:signed-leaf} uses the appropriate sign
+at the new root, and Lemma~\ref{lem:signed-branch} uses the same sign
+in both smaller trees.
+
+\begin{theorem}[The main counting inequality]
+\label{thm:antidirected-master}
+Let $T$ be an antidirected tree on $t\geq2$ vertices, rooted at $r$, and
+let $D$ be a digraph on $N\geq1$ vertices.  With
+$\sigma=\sigma_T(r)$,
+\begin{equation}
+        M^\sigma
+        \leq |\cO^\sigma(T,r)|+(t-2)N!.
+        \label{eq:antidirected-master}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+We induct on $t$.  If $t=2$, the unique arc incident with $r$ points away
+from $r$ when $\sigma=+$ and towards $r$ when $\sigma=-$.  Every pair of
+sign $\sigma$ therefore supplies the required rooted edge, so
+$M^\sigma=|\cO^\sigma(T,r)|$.
+
+Suppose first that $r$ is a leaf, let $p$ be its neighbour, and put
+$S=T-r$.  The vertex $p$ has sign $-\sigma$ in $S$.  By induction and
+Proposition~\ref{prop:digraph-normalization},
+\[
+ M^\sigma=M^{-\sigma}
+ \leq |\cO^{-\sigma}(S,p)|+(t-3)N!.
+\]
+Lemma~\ref{lem:signed-leaf} now gives
+\[
+ M^\sigma
+ \leq |\cO^\sigma(T,r)|+(t-2)N!.
+\]
+
+Suppose instead that $r$ has degree at least two.  Partition the components
+of $T-r$ into two nonempty groups, and let $T_1,T_2$ be the corresponding
+rooted subtrees after restoring $r$.  Both have root sign $\sigma$.  If
+$t_j=|V(T_j)|$, then $t_1+t_2=t+1$.  Adding the two induction inequalities
+and applying Lemma~\ref{lem:signed-branch} gives
+\[
+\begin{aligned}
+ 2M^\sigma
+   &\leq |\cO^\sigma(T_1,r)|+|\cO^\sigma(T_2,r)|
+          +(t_1+t_2-4)N!\\
+   &\leq M^\sigma+|\cO^\sigma(T,r)|
+          +(t-2)N!.
+\end{aligned}
+\]
+Subtracting $M^\sigma$ proves the result.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:antidirected-density}]
+The strict density hypothesis excludes the empty host.  Write
+$N=|V(D)|\geq1$, and root $T$ at any vertex $r$.  If $D$ were
+$T$-free, then $\cO^\sigma(T,r)$ would be empty.  Theorem
+\ref{thm:antidirected-master} and Proposition
+\ref{prop:digraph-normalization} would give
+\[
+        e(D)(N-1)!\leq(t-2)N!,
+\]
+or equivalently $e(D)\leq(t-2)N$, contrary to the hypothesis.
+\end{proof}
+
+\section{A tournament consequence}
+\label{sec:tournaments}
+
+Sumner's conjecture asserts that every tournament on $2t-2$ vertices
+contains every oriented tree on $t$ vertices; it is known for all
+sufficiently large $t$ \cite{KuhnMycroftOsthus2011,SteinSurvey2024}.
+Theorem~\ref{thm:antidirected-density} gives the antidirected case
+for every $t\geq2$.
+
+\begin{corollary}[Sumner's bound for antidirected trees]
+Every tournament on at least $2t-2$ vertices contains every antidirected
+tree on $t\geq2$ vertices.
+\end{corollary}
+
+\begin{proof}
+Restrict to any $N=2t-2$ vertices.  The resulting tournament $D$ has
+\[
+ e(D)=\frac{N(N-1)}2=N\left(t-\frac32\right)>(t-2)N.
+\]
+Apply Theorem~\ref{thm:antidirected-density}.
+\end{proof}
+
+\section{Lean formalization}
+\label{sec:lean}
+
+The accompanying project in \texttt{lean/} proves the counting
+inequalities and the density theorem in Lean~4.19.0, using the bundled
+\texttt{Std} library.  We describe its definitions and their relation
+to the proof.  Instructions for checking the files are given in
+\texttt{lean/README.md}.
+
+\subsection{Definitions and theorem statements}
+
+Finite digraphs are represented by lists of vertices and arcs, with no
+repeated entries.  Opposite arcs are allowed.  An embedding preserves
+arcs and is injective on all target vertices, not just separately on
+the sources and the sinks.
+
+The final density theorem assumes that the target has at least two
+vertices, is antidirected, and has a connected underlying graph with
+no simple cycle.  Connectedness is defined using walks, and a simple
+cycle has distinct vertices apart from its repeated endpoint.
+These definitions do not refer to the counting argument.
+The corresponding declarations are
+\begin{itemize}[leftmargin=*]
+\item \texttt{Digraph.addarioBerry\_bound\_of\_no\_simple\_cycle},
+      giving $e(D)\leq(t-2)|V(D)|$ for a $T$-free host;
+\item \texttt{Digraph.addarioBerry\_contains\_of\_no\_simple\_cycle},
+      giving Theorem~\ref{thm:antidirected-density}.
+\end{itemize}
+The older declarations \texttt{Digraph.addarioBerry\_bound} and
+\texttt{Digraph.addarioBerry\_contains} use a recursive definition
+of the target tree.  Both versions remain available.
+
+\subsection{Relation to the proof}
+
+The counting proof is organized recursively.  It starts with one arc,
+adds a new leaf as the root, or joins two trees at their common root.
+The code proves that the induction parameter is the number of target
+vertices minus two.  It also proves that every antidirected tree
+with a connected, acyclic underlying graph can be built by these
+operations, with any chosen vertex as its root.  This step is proved
+in \texttt{Digraph/TreeBridge.lean}; the final theorems do not require
+the user to supply a recursive construction.
+
+The formal proof of Lemma~\ref{lem:signed-leaf} swaps the first and
+marked vertices rather than reversing the whole prefix.  Both maps
+preserve the prefix vertex set, change the sign of the mark, and are
+their own inverses for each fixed marked position.  The proof of
+Lemma~\ref{lem:signed-branch} uses the same shortest marked prefix
+as the paper.  The tournament corollary has not been formalized.
+
+\subsection{Verification}
+
+The project specifies the Lean version and includes a script that
+compiles the files and checks which axioms the theorems depend on.
+The theorem statements are collected in \texttt{lean/Statements.lean}.
+Only \texttt{propext}, \texttt{Classical.choice}, and
+\texttt{Quot.sound} are permitted in these dependency checks.
+
+\begin{thebibliography}{99}
+
+\bibitem{AddarioBerryHavetLinharesSalesReedThomasse2013}
+L.~Addario-Berry, F.~Havet, C.~Linhares Sales, B.~Reed, and S.~Thomass\'e,
+\emph{Oriented trees in digraphs},
+Discrete Math. \textbf{313} (2013), 967--974.
+\href{https://doi.org/10.1016/j.disc.2013.01.011}
+{doi:10.1016/j.disc.2013.01.011}.
+
+\bibitem{KuhnMycroftOsthus2011}
+D.~K\"uhn, R.~Mycroft, and D.~Osthus,
+\emph{A proof of Sumner's universal tournament conjecture for large
+tournaments},
+Proc. Lond. Math. Soc. (3) \textbf{102} (2011), 731--766.
+
+\bibitem{SteinTrujilloNegrete2025}
+M.~Stein and A.~Trujillo-Negrete,
+\emph{Antidirected trees in dense digraphs},
+SIAM J. Discrete Math. \textbf{39} (2025), 698--727.
+\href{https://doi.org/10.1137/24M165497X}{doi:10.1137/24M165497X}.
+
+\bibitem{SteinSurvey2024}
+M.~Stein,
+\emph{Oriented trees and paths in digraphs},
+in \emph{Surveys in Combinatorics 2024},
+London Math. Soc. Lecture Note Ser. \textbf{493},
+Cambridge Univ. Press, 2024, 271--295.
+
+\bibitem{SteinZarateGueren2024}
+M.~Stein and C.~Z\'arate-Guer\'en,
+\emph{Antidirected subgraphs of oriented graphs},
+Combin. Probab. Comput. \textbf{33} (2024), 446--466.
+
+\bibitem{Erdos548Repository}
+T.~Adamczewski (maintainer),
+\emph{Erd\H{o}s problem \#548: Lean proof and provenance}, 2026.
+\url{https://github.com/tadamcz/erdos548}.
+
+\end{thebibliography}
+\end{document}

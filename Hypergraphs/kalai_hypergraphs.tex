@@ -1,0 +1,1042 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{mathrsfs}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!55!black,
+  citecolor=blue!55!black,urlcolor=blue!55!black]{hyperref}
+\numberwithin{equation}{section}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+\newcommand{\cA}{\mathcal A}
+\newcommand{\cD}{\mathcal D}
+\newcommand{\cO}{\mathcal O}
+\newcommand{\cQ}{\mathcal Q}
+\newcommand{\cT}{\mathcal T}
+\newcommand{\ex}{\operatorname{ex}}
+
+\title{A proof of Kalai's tight-tree conjecture}
+\author{Louis DeBiasio}
+\date{September 6, 2026}
+
+\hypersetup{pdfauthor={Louis DeBiasio}, pdftitle={A proof of Kalai's tight-tree conjecture}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We prove Kalai's conjecture for tight uniform hypergraph trees.
+If $T$ is a tight $r$-uniform tree with $m$ edges, where $r\geq2$,
+then every $T$-free $r$-uniform hypergraph $H$ satisfies
+$r e(H)\leq(m-1)|\partial H|$, where $\partial H$ is the family
+of $(r-1)$-sets contained in its edges.  The proof extends the
+permutation-counting argument of the recent Erd\H{o}s--S\'os proof
+obtained in the FrontierMath Erd\H{o}s benchmark.  We also give a direct proof for
+tight paths and a Lean~4 formalization of the general theorem.
+\end{abstract}
+
+\section*{Acknowledgments}
+ChatGPT~6 Astra was used to develop the argument, write the exposition,
+and produce the accompanying Lean formalization.  The author's role
+was minimal, consisting mostly of asking questions towards trying to understand
+the recent Erd\H{o}s--S\'os proof and its possible extensions.
+
+\section{Introduction}
+\label{sec:introduction}
+
+In 1984, Gil Kalai \cite{Kalai1984} proposed a hypergraph extension
+of the Erd\H{o}s--S\'os conjecture.  He conjectured that every
+$n$-vertex $r$-uniform hypergraph with more than
+$\frac{m-1}{r}\binom n{r-1}$ edges contains every tight $r$-uniform
+tree with $m$ edges.  The conjecture was published by Frankl and
+F\"uredi \cite[Conjecture~3.6]{FF1987}, who attribute it to a 1984
+communication from Kalai.  We prove the conjecture, in the sharper
+form that replaces $\binom n{r-1}$ by the number of $(r-1)$-sets
+contained in edges of the hypergraph.
+
+Our proof is based on the new proof of the Erd\H{o}s--S\'os conjecture
+obtained in the FrontierMath Erd\H{o}s benchmark and recorded in
+\cite{Erdos548Repository}.\footnote{The repository is maintained by
+Tom Adamczewski.  Its provenance account credits the graph proof to
+GPT-6 Astra, working autonomously in the FrontierMath Erd\H{o}s
+benchmark of Adamczewski and Bloom.}
+We adapt that proof's counting of marked vertex permutations and
+induction on the target tree; we do not claim an independent origin
+for this method.  In the graph argument, copies are rooted at a
+specified vertex.  For the hypergraph argument, we prescribe the
+images of all vertices in one edge.  This allows copies of branches
+attached through different faces to agree on their common edge.
+The counting inequalities and the required decomposition are proved
+here for hypergraphs, rather than deduced by applying the graph
+theorem as a black box.
+
+\subsection{Definitions and main result}
+
+All hypergraphs are finite and simple.  An $r$-uniform hypergraph, or
+\emph{$r$-graph}, has edges that are $r$-element vertex sets.  A copy is
+injective and edge-preserving, but need not be induced.
+
+\begin{definition}
+A \emph{tight $r$-tree} with $m\geq1$ edges admits an edge ordering
+$e_1,\ldots,e_m$ such that, for every $j\geq2$, there is a vertex
+$x_j\in e_j\setminus\bigcup_{h<j}e_h$ and an index $p(j)<j$ with
+$e_j\setminus\{x_j\}\subseteq e_{p(j)}$.
+The vertex set of a tight tree is the union of its edges; in particular,
+there are no additional isolated vertices.  Such a tree has $m+r-1$
+vertices.
+The \emph{tight path} $P_m^{(r)}$ has distinct vertices
+$x_1,\ldots,x_{m+r-1}$ and edges
+\[
+ \{x_j,x_{j+1},\ldots,x_{j+r-1}\},\qquad 1\leq j\leq m.
+\]
+\end{definition}
+
+Throughout the paper, $m$ denotes the number of \emph{edges} of the
+target.  We write $e(H)=|E(H)|$.
+
+The $(r-1)$-\emph{shadow} of an $r$-graph $H$ is
+\[
+ \partial H=\{F: |F|=r-1,\ F\subseteq e\text{ for some }e\in E(H)\}.
+\]
+Our main result is the following.
+
+\begin{theorem}[Tight-tree shadow bound]
+\label{thm:main}
+Let $r\geq2$ and $m\geq1$, and let $T$ be a tight $r$-tree with
+$m$ edges.  Every $T$-free $r$-graph $H$ satisfies
+\begin{equation}
+ r e(H)\leq(m-1)|\partial H|.
+ \label{eq:main-shadow}
+\end{equation}
+\end{theorem}
+
+Since $|\partial H|\leq\binom{|V(H)|}{r-1}$, this proves Kalai's
+conjecture in its usual form; see \cite{FJKMV2019,Stein2024}.
+
+\begin{corollary}[Kalai's bound]
+\label{cor:kalai}
+Let $r\geq2$ and $m\geq1$, and let $T$ be a tight $r$-tree with
+$m$ edges.  Every $n$-vertex $T$-free $r$-graph $H$ satisfies
+\[
+ e(H)\leq\frac{m-1}{r}\binom{n}{r-1}.
+\]
+\end{corollary}
+
+The shadow formulation appears as Conjecture~2.1 in
+\cite{FJKMV2019}.  Its coefficient is sharp: for $m\geq2$, the complete
+$r$-graph on $m+r-2$ vertices has no copy of $T$ and attains equality
+in \eqref{eq:main-shadow}.  The case $r=2$ gives the corresponding
+tree bound with the number of nonisolated host vertices in place of
+$|V(H)|$.
+
+\subsection{Related work}
+
+Frankl and F\"uredi \cite[Theorem~3.8]{FF1987} proved Kalai's
+conjecture for star-shaped tight trees: those containing an edge that
+meets every other edge in $r-1$ vertices.
+F\"uredi, Jiang, Kostochka, Mubayi, and Verstra\"ete
+\cite{FJKMV2019} proved Kalai's bound for tight trees with at most four
+edges and an asymptotic form for tight trees of bounded trunk size.
+Their work also develops bounds in terms of the shadow of the host.
+For tight paths, their geometric method in \cite{FJKMV2020} gives
+improved upper bounds in arbitrary uniformity.  In particular,
+\cite[Theorem~1.2]{FJKMV2020} gives
+\[
+ \ex(n,P_m^{(3)})\leq
+ \frac12\left(m+\left\lfloor\frac{m-1}{3}\right\rfloor\right)
+ \binom n2.
+\]
+Here $\ex(n,F)$ denotes the maximum number of edges in an $n$-vertex
+$F$-free hypergraph of the same uniformity as $F$.
+Stein \cite{Stein2024} proved Kalai's conjecture for $r$-partite
+$r$-graphs.  Bright, Milans, and Porter \cite{BMP2025} study the related
+problem of excluding tight paths under order-preserving embeddings.
+No partiteness or order-preservation restriction is imposed here.
+
+\subsection{Outline of the proof}
+
+Consider a permutation $(v_1,\ldots,v_n)$ of the host vertices.
+We mark position $i\geq r$ if $v_i$ together with the first $r-1$
+vertices forms an edge.  We count pairs consisting
+of a permutation and one of its marked positions.  For a fixed tree,
+we count those pairs for which the first $i$ vertices contain a copy
+of the tree, with one specified edge mapped to the marking edge.
+The copy need not follow the order of the permutation, and each pair
+is counted only once, even if it admits several copies.
+
+The induction compares these counts for smaller trees.  To add a leaf,
+we use a copy lying entirely before the current marked position;
+the vertex at that position is then available for the new leaf.
+This excludes at most one pair for each permutation.  To join two
+trees along a common edge, we require their copies to agree on that
+edge and use disjoint sets of vertices elsewhere.  An injection
+obtained by reordering the permutation gives the needed counting
+inequality.  Finally, we show that every tight tree can be decomposed
+using these two operations.  The resulting inequality gives the
+claimed bound when the host contains no copy of the tree.
+
+Section~\ref{sec:three} gives the marked-position argument for
+$3$-uniform paths, and Section~\ref{sec:paths-r} treats arbitrary
+uniformity.  Sections~\ref{sec:anchored} and
+\ref{sec:anchored-transfers} count copies with a specified edge and
+prove the two counting inequalities.  Section~\ref{sec:full-master}
+completes the induction.
+Section~\ref{sec:examples} records an example and sharpness, and
+Section~\ref{sec:formalization} describes the accompanying formal proof.
+
+\section{Marked positions for tight paths}
+\label{sec:three}
+
+We first prove the theorem for $3$-uniform paths.  In this case, the
+injection rearranges just three entries of a permutation.  The main
+point is to use a path that avoids the vertex at the current marked
+position, so that this vertex can extend the path.
+
+\subsection{Marked permutations}
+
+Fix a $3$-graph $H$ on $n\geq3$ vertices.  For distinct vertices $a,b$,
+write
+\[
+ d_H(ab)=|\{z:\{a,b,z\}\in E(H)\}|.
+\]
+For a permutation $\pi=(v_1,\ldots,v_n)$ and $3\leq i\leq n$, call
+$(\pi,i)$ \emph{marked} if $\{v_1,v_2,v_i\}\in E(H)$.  Its prefix
+is the vertex set $S_i(\pi)=\{v_1,\ldots,v_i\}$.
+Let $\cO(H)$ be the set of marked states and $M=|\cO(H)|$.
+
+For $k\geq1$, let $\cA_k$ be the set of marked states whose prefixes
+contain a tight $k$-edge path with vertex sequence
+\begin{equation}
+ v_1,v_2,y_3,\ldots,y_{k+2}.
+ \label{eq:rooted-path}
+\end{equation}
+The starting pair is ordered, but the remaining path vertices need not
+occur in the permutation in path order.  Support is an existence
+condition inside the prefix vertex set.  Each supporting state is
+counted once, independently of the number of witnesses.  Write
+$A_k=|\cA_k|$.
+
+\begin{lemma}[Basic counts]
+\label{lem:normalization}
+With the notation above,
+\begin{equation}
+ A_1=M=6e(H)(n-2)!.
+ \label{eq:normalization}
+\end{equation}
+Let $\cQ$ be the set of permutations whose first pair belongs to
+$\partial H$.  Then
+\begin{equation}
+ Q:=|\cQ|=2|\partial H|(n-2)!.
+ \label{eq:Q}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Every marked state supports a one-edge path starting at its first pair,
+so $\cA_1=\cO(H)$.  For each fixed ordered pair $(a,b)$, there are
+$(n-2)!$ permutations starting with $(a,b)$, and each contributes
+$d_H(ab)$ marks.  Each edge contributes to six ordered pairs, giving
+\[
+ M=(n-2)!\sum_{a\ne b}d_H(ab)=6e(H)(n-2)!.
+\]
+Each shadow pair has two orders and each such order can begin
+$(n-2)!$ permutations.  This proves \eqref{eq:Q}.
+\end{proof}
+
+\subsection{Extending a path}
+
+If an earlier marked position already admits the required path, that
+path avoids the vertex at the current marked position.  We therefore
+discard the first such position in each permutation and extend the
+paths at all remaining positions.  This gives the following inequality.
+
+\begin{lemma}[Path extension]
+\label{lem:transfer}
+For every $k\geq1$,
+\begin{equation}
+ A_k\leq A_{k+1}+Q.
+ \label{eq:transfer}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For each permutation $\pi$ contributing to $\cA_k$, let $i_0(\pi)$
+be its first position in $\cA_k$, and put
+\[
+ \cD_k=\{(\pi,i_0(\pi)):\pi\text{ contributes to }\cA_k\}.
+\]
+Such a permutation has a marked position, so its first pair lies in
+$\partial H$.  Hence $|\cD_k|\leq Q$.
+
+We construct an injection $\Phi_k:\cA_k\setminus\cD_k\to\cA_{k+1}$.
+Take a state $(\pi,i)$ in its domain and write
+\[
+ \pi=(a,b,W,z,R),\qquad
+ W=(v_3,\ldots,v_{i-1}),\quad z=v_i,\quad
+ R=(v_{i+1},\ldots,v_n).
+\]
+Since $i>i_0(\pi)$, the prefix $S_{i_0(\pi)}(\pi)$ contains a path
+\[
+ a,b,y_3,\ldots,y_{k+2}
+\]
+and does not contain $z$.  The marking triple $\{z,a,b\}$ extends
+this to a path
+\begin{equation}
+ z,a,b,y_3,\ldots,y_{k+2}
+ \label{eq:extended-path}
+\end{equation}
+with $k+1$ edges.  Indeed, its first edge is $\{z,a,b\}$ and its
+remaining consecutive triples are precisely the old path edges.
+All vertices remain distinct.
+
+Define
+\begin{equation}
+ \Phi_k\bigl((a,b,W,z,R),i\bigr)
+       =\bigl((z,a,W,b,R),i\bigr).
+ \label{eq:cycle-map}
+\end{equation}
+The new prefix has the same vertex set.  Its first pair is $(z,a)$,
+the starting pair of \eqref{eq:extended-path}, and its last vertex is
+$b$.  Thus its marking triple is still $\{z,a,b\}$.  The image is
+therefore in $\cA_{k+1}$.
+
+The retained index $i$ identifies the displaced entry $b$.
+For any image $(\rho,i)$, the unique possible source ordering is
+\begin{equation}
+ (\rho_2,\rho_i,\rho_3,\ldots,\rho_{i-1},\rho_1,
+       \rho_{i+1},\ldots,\rho_n).
+ \label{eq:inverse}
+\end{equation}
+This inverse cycle on positions $1,2,i$ recovers the source without
+using the earlier index $i_0(\pi)$ or choosing a path witness.  Hence
+$A_k-|\cD_k|\leq A_{k+1}$ proves \eqref{eq:transfer}.
+\end{proof}
+
+\begin{theorem}[Tight-path shadow bound]
+\label{thm:three}
+For every integer $m\geq1$ and every $P_m^{(3)}$-free $3$-graph $H$,
+\begin{equation}
+ 3e(H)\leq(m-1)|\partial H|.
+ \label{eq:shadow-bound}
+\end{equation}
+In particular, for an $n$-vertex host,
+$e(H)\leq\frac{m-1}{3}\binom n2$.
+\end{theorem}
+
+\begin{proof}
+If $n<3$ there are no edges, so assume $n\geq3$.
+Iterating Lemma~\ref{lem:transfer} gives
+\[
+ 6e(H)(n-2)!=A_1\leq A_m+(m-1)Q.
+\]
+The forbidden-path hypothesis gives $A_m=0$; substitution of
+\eqref{eq:Q} and division by $2(n-2)!$ gives
+\eqref{eq:shadow-bound}.  For $m=1$ the iteration is empty and
+$A_1=0$, which gives the same conclusion.  Finally,
+$|\partial H|\leq\binom n2$.
+\end{proof}
+
+\subsection{The role of the mark}
+
+The path and the marking edge need not start with the same edge.
+The path only has to lie among the first $i$ vertices and start with
+the ordered pair $(v_1,v_2)$.  The mark supplies another edge through
+that pair.  Moving $z$ to the first position and $b$ to the marked
+position preserves both requirements.  The map does not depend on
+which path is chosen; the earlier marked position ensures that a path
+avoiding $z$ exists.
+
+\begin{example}
+For five distinct vertices $a,b,c,d,z$, write $abc$ for
+$\{a,b,c\}$, and similarly for other edges.  Suppose $H$ contains
+$abc,bcd,zab$, and take
+\[
+ \pi=(a,b,c,d,z),\qquad i=5.
+\]
+The prefix at position $4$ contains the two-edge path $a,b,c,d$.
+However, position $4$ is marked only if $abd\in E(H)$.  Without that
+edge, position $5$ is the first supporting mark and is discarded.
+If $abd\in E(H)$, the map is defined at position $5$ and gives
+\[
+ (a,b,c,d,z)\longmapsto(z,a,c,d,b),
+\]
+whose full prefix supports $z,a,b,c,d$ and whose mark is $zab$.
+Thus an earlier supporting prefix alone is not sufficient: the proof
+uses an earlier supporting \emph{marked state}.
+\end{example}
+
+\begin{remark}[Boundary cases and equality]
+An empty host has $A_k=M=Q=0$.  For $n=3$, every permutation has at
+most one mark, so every supporting pair is discarded.
+For the complete $3$-graph on $s=m+1\geq3$ vertices, there is no
+$P_m^{(3)}$, and
+\[
+ 3\binom{s}{3}=(m-1)\binom{s}{2}.
+\]
+Thus the coefficient in the shadow bound cannot be reduced.  More
+precisely, every permutation has $s-2$ marks and exactly $s-k-1$
+of them support a $k$-edge path, for $1\leq k\leq s-1$.  Hence
+$A_k=(s-k-1)s!$ and $A_k-A_{k+1}=Q=s!$ throughout the nontrivial
+iteration.  Adding isolated vertices does not change the shadow or edge
+count and only changes the factorial normalizations.
+\end{remark}
+
+\section{Tight paths in arbitrary uniformity}
+\label{sec:paths-r}
+
+The preceding proof extends by replacing the three-cycle with an
+$r$-cycle of entries.  We give the map explicitly.
+Fix $r\geq2$ and $n\geq r$.  Mark $(\pi,i)$, $i\geq r$, when
+\[
+ \{v_1,\ldots,v_{r-1},v_i\}\in E(H).
+\]
+Let $A_k^{(r)}$ count the marked states whose prefixes support a tight
+$k$-edge path starting with the ordered tuple
+$(v_1,\ldots,v_{r-1})$.  The same normalization gives
+\begin{equation}
+ A_1^{(r)}=r!\,e(H)(n-r+1)!,\qquad
+ Q_r=(r-1)!\,|\partial H|(n-r+1)!.
+ \label{eq:r-normalization}
+\end{equation}
+Here $Q_r$ counts permutations whose first $(r-1)$-set belongs to the
+shadow.
+
+Discard the first supporting marked state of each permutation.  At a
+remaining state, write
+\[
+ \pi=(a_1,\ldots,a_{r-1},W,z,R).
+\]
+An earlier path beginning $a_1,\ldots,a_{r-1}$ avoids $z$, and
+prepending $z$ adds exactly the marking edge.  Apply
+\begin{equation}
+ \bigl((a_1,\ldots,a_{r-1},W,z,R),i\bigr)
+ \longmapsto
+ \bigl((z,a_1,\ldots,a_{r-2},W,a_{r-1},R),i\bigr).
+ \label{eq:r-cycle}
+\end{equation}
+The prefix set and marking $r$-set are unchanged.  The new first
+$(r-1)$-tuple is the starting tuple of the extended path.
+The inverse takes the entries at positions $2,\ldots,r-1,i$ as the
+old root tuple, restores the entry at position $1$ to position $i$,
+and leaves all other entries fixed.  Thus
+\[
+ A_k^{(r)}\leq A_{k+1}^{(r)}+Q_r.
+\]
+When $r=2$, the tuple $(a_1,\ldots,a_{r-2})$ is empty and the map
+simply exchanges the first entry and the mark.
+
+\begin{corollary}
+\label{cor:all-r}
+If an $r$-graph $H$ contains no tight path with $m$ edges, then
+\[
+ r e(H)\leq(m-1)|\partial H|.
+\]
+Consequently it satisfies Corollary~\ref{cor:kalai}
+for the target $P_m^{(r)}$.
+\end{corollary}
+
+\begin{proof}
+For $n<r$ there are no edges.  Otherwise iterate the preceding
+inequality, use $A_m^{(r)}=0$, and divide
+\eqref{eq:r-normalization} by $(r-1)!(n-r+1)!$.
+\end{proof}
+
+\section{Copies with a specified edge}
+\label{sec:anchored}
+
+For paths, it was enough to specify the first $r-1$ vertices of a
+copy.  A tight tree may have several edges attached through different
+$(r-1)$-subsets of the same edge.  For example, the tight
+$3$-tree
+\[
+ 123,\qquad124,\qquad135,\qquad236
+\]
+has edges attached through all three pairs of $123$.  To combine
+copies of these branches, we must make them agree on the images of
+all three vertices of $123$, not just two of them.
+
+We therefore choose an edge of the target, called its \emph{root edge},
+and specify the image of each of its vertices.  Unlike the condition
+used for paths, we now require this chosen edge to map to the marking
+edge.  Copies of two branches can then be made to agree on their common
+edge.  In the proof of Lemma~\ref{lem:anchored-glue}, we arrange for
+their other vertices to lie in disjoint parts of the permutation.
+
+\subsection{Definitions and basic counts}
+
+Fix $r\geq2$ and an $r$-graph $H$ on $n\geq r$ vertices.  Let
+\[
+ \cO_r(H)=\{(\pi,i):\pi=(v_1,\ldots,v_n),\ r\leq i\leq n,
+       \ \{v_1,\ldots,v_{r-1},v_i\}\in E(H)\}.
+\]
+Put $S_i(\pi)=\{v_1,\ldots,v_i\}$ and let $\cQ_r$ be the set of
+permutations whose first $(r-1)$-set lies in $\partial H$.  Throughout
+the general-tree argument write
+\begin{equation}
+ M=|\cO_r(H)|=r!\,e(H)(n-r+1)!,\qquad
+ Q=|\cQ_r|=(r-1)!\,|\partial H|(n-r+1)!.
+ \label{eq:anchored-normalization}
+\end{equation}
+To verify \eqref{eq:anchored-normalization}, each ordered
+$(r-1)$-tuple begins
+$(n-r+1)!$ permutations, each with one mark for every edge containing
+that tuple.  Summing over the ordered tuples gives $r!e(H)$.  Counting
+the orders of each shadow face gives the formula for $Q$.
+
+\begin{definition}[Support with a specified edge]
+Let $T$ be an $r$-graph with a distinguished ordered edge
+$\mathbf e=(u_1,\ldots,u_r)$, whose underlying set is $e$.
+A marked state $(\pi,i)$ \emph{supports $(T,\mathbf e)$} if there is
+an injective edge-preserving map $\varphi:V(T)\to S_i(\pi)$ with
+\begin{equation}
+ \varphi(u_j)=v_j\quad(1\leq j<r),\qquad
+ \varphi(u_r)=v_i.
+ \label{eq:anchored-support}
+\end{equation}
+Let $\cA_H(T,\mathbf e)$ be the set of these states and put
+$R_H(T,\mathbf e)=|\cA_H(T,\mathbf e)|$.  Each state is counted once,
+regardless of the number of witnessing embeddings.  We omit the host
+subscript when it is fixed.
+\end{definition}
+
+\begin{lemma}[Independence of the ordering of the root edge]
+\label{lem:root-order}
+The count $R(T,\mathbf e)$ depends on the root edge $e$, but not on
+the ordering of its vertices.  We may therefore denote it by $R(T,e)$.
+\end{lemma}
+
+\begin{proof}
+Fix the marked position $i$.  If the target root order is changed by a
+permutation of its $r$ entries, apply the same permutation to the host
+entries in positions $1,\ldots,r-1,i$.  All other entries and the index
+$i$ remain fixed.  The prefix vertex set and the marking edge are
+unchanged.  The same embedding sends each root vertex to its required
+position after the change.  The inverse
+permutation reverses the construction, so this is a bijection for each
+$i$, and hence for their disjoint union.
+\end{proof}
+
+Thus reordering the root vertices does not change the total count.
+It can change whether an individual pair $(\pi,i)$ supports the
+target, so we will specify the root orders when comparing sets of pairs.
+
+\section{Extending and joining copies}
+\label{sec:anchored-transfers}
+
+We need two inequalities: one for adding a leaf edge, and one for
+joining two hypergraphs along an edge.  The second proof is easier
+to write after moving the marking edge to the first $r$ positions.
+We first show that this rearrangement leaves the counts unchanged.
+
+\subsection{A new leaf edge and a change of root}
+
+\begin{lemma}[Adding a leaf edge]
+\label{lem:anchored-leaf}
+Let $S$ have a distinguished edge $f=F\cup\{p\}$, where
+$|F|=r-1$.  Let $z\notin V(S)$, and form $T$ by adding $z$ and
+the edge $e=F\cup\{z\}$ to $S$.  Then
+\begin{equation}
+ R(S,f)\leq R(T,e)+Q.
+ \label{eq:anchored-leaf}
+\end{equation}
+Thus the distinguished edge changes from $f$ to the newly added edge $e$.
+\end{lemma}
+
+\begin{proof}
+Order $F$ as $(u_1,\ldots,u_{r-1})$ and use the orders
+$\mathbf f=(u_1,\ldots,u_{r-1},p)$ and
+$\mathbf e=(u_1,\ldots,u_{r-1},z)$.  Lemma~\ref{lem:root-order}
+allows these choices without changing either count.
+
+For each permutation $\pi$ having a state in $\cA(S,\mathbf f)$,
+discard its first such state, at position $i_0(\pi)$.  Let $\cD$ be
+the set of discarded states.  Each contributing permutation has a mark,
+so belongs to $\cQ_r$; hence $|\cD|\leq Q$.
+
+Take $(\pi,i)\in\cA(S,\mathbf f)\setminus\cD$.  An earlier state
+$(\pi,i_0)$ supports $S$, with $u_j\mapsto v_j$ for $j<r$ and
+$p\mapsto v_{i_0}$.  This earlier embedding avoids $v_i$ because
+$i_0<i$.  Extend it by setting $z\mapsto v_i$.  The only added target
+edge maps to the current marking edge
+$\{v_1,\ldots,v_{r-1},v_i\}$.  The extended embedding is injective
+and sends each vertex of $e$ to its required position.
+
+Consequently the \emph{identity map on states} gives the inclusion
+\[
+ \cA(S,\mathbf f)\setminus\cD\ \subseteq\ \cA(T,\mathbf e).
+\]
+Taking cardinalities proves \eqref{eq:anchored-leaf}.  The current
+state's witness for $S$ need not be used; it is the earlier witness
+that guarantees avoidance of the new vertex.
+\end{proof}
+
+\subsection{Moving the marking edge to the front}
+
+Consider the following alternative set of pairs:
+\[
+ \mathcal B_r(H)=\{(\rho,i):\rho=(w_1,\ldots,w_n),\ r\leq i\leq n,
+                         \ \{w_1,\ldots,w_r\}\in E(H)\}.
+\]
+The first $r$ entries form an ordered edge, and $i$ specifies how many
+vertices may be used in a copy.  Every value $r,\ldots,n$ is allowed.
+We indicate the end of the prefix by a vertical bar after position $i$,
+which we call the \emph{divider}.  The bijection between the two
+sets of pairs is
+\begin{equation}
+ \begin{split}
+ \Theta:\cO_r(H)&\longrightarrow\mathcal B_r(H),\\
+ ((a_1,\ldots,a_{r-1},W,c,C),i)
+   &\longmapsto ((a_1,\ldots,a_{r-1},c,W,C),i),
+ \end{split}
+ \label{eq:edge-front}
+\end{equation}
+where $c$ was at position $i$ and $|W|=i-r$.  The index is retained.
+For $(\rho,i)\in\mathcal B_r(H)$, the inverse ordering is
+\begin{equation}
+ (w_1,\ldots,w_{r-1},w_{r+1},\ldots,w_i,w_r,
+                                      w_{i+1},\ldots,w_n).
+ \label{eq:edge-front-inverse}
+\end{equation}
+Empty blocks are omitted, so the formula also applies when $i=r$.
+
+The prefix set is unchanged.  Under $\Theta$, condition
+\eqref{eq:anchored-support} becomes $u_j\mapsto w_j$ for every
+$1\leq j\leq r$.  Let $\mathcal B(T,\mathbf e)$ denote the supporting
+states in this representation.  Thus
+\begin{equation}
+ |\mathcal B_r(H)|=M,\qquad
+ |\mathcal B(T,\mathbf e)|=R(T,e).
+ \label{eq:front-counts}
+\end{equation}
+The first identity also follows directly:
+there are $r!e(H)(n-r)!$ orderings with an edge first, and each has
+$n-r+1$ possible values of $i$.
+
+\subsection{Joining copies along a common edge}
+
+\begin{lemma}[Joining along an edge]
+\label{lem:anchored-glue}
+Suppose $T=T_1\cup T_2$, the edge $e$ belongs to both $T_1$ and $T_2$,
+and $V(T_1)\cap V(T_2)=e$.  Then
+\begin{equation}
+ R(T_1,e)+R(T_2,e)\leq M+R(T,e).
+ \label{eq:anchored-glue}
+\end{equation}
+The inequality holds for arbitrary $r$-graphs $T_1,T_2$ with the stated
+intersection; they need not be tight trees.
+\end{lemma}
+
+\begin{proof}
+Fix the same ordering $\mathbf e$ in all three targets and work in
+$\mathcal B_r(H)$.  We construct an injection
+\begin{equation}
+ \mathcal B(T_1,\mathbf e)\setminus\mathcal B(T,\mathbf e)
+ \longrightarrow
+ \mathcal B_r(H)\setminus\mathcal B(T_2,\mathbf e).
+ \label{eq:anchored-glue-injection}
+\end{equation}
+
+Take a source state $(\rho,i)$, and let $a$ be the least index in
+$\{r,\ldots,i\}$ at which its prefix supports $T_1$ with the prescribed
+root-edge correspondence.  Write
+\[
+ \rho=(E_0,A,B,C),\qquad
+ E_0=(w_1,\ldots,w_r),\quad
+ A=(w_{r+1},\ldots,w_a),\quad B=(w_{a+1},\ldots,w_i).
+\]
+Here $E_0$ lists the root-edge images, and $A,B,C$ are consecutive
+lists of the remaining vertices.  The original prefix ends after $B$.
+Set $b=r+|B|$ and define
+\begin{equation}
+ ((E_0,A,B,C),i)\longmapsto ((E_0,B,A,C),b).
+ \label{eq:anchored-rotation}
+\end{equation}
+In divider notation this is
+\[
+ (E_0,A,B\mid C)\longmapsto(E_0,B\mid A,C).
+\]
+The image is a valid state of $\mathcal B_r(H)$, including when $B$
+is empty, since then $b=r$.
+
+By the choice of $a$, the vertices in $E_0,A$ contain a copy of $T_1$
+with the specified images of the root vertices.  If the image prefix
+$E_0,B$ supported $T_2$, the
+two embeddings would agree on every vertex of $e$ and be disjoint
+outside $e$.  Indeed, the non-root vertices of the first copy lie in
+$A$ and those of the second lie in $B$.  Their union would therefore
+embed $T$ into the original prefix, contrary to the source condition.
+This proves that the image is in the right-hand side of
+\eqref{eq:anchored-glue-injection}.
+
+To recover the source from an image, first read $E_0$ from the first
+$r$ positions and $B$ from the rest of the image prefix.  Starting
+immediately after the image divider, find the shortest initial block
+$A'$ such that $E_0,A'$ supports $T_1$ with its prescribed root edge.
+Allow $A'$ to be empty.  The actual block $A$ works.  No shorter
+initial block works, since such a block would be a proper initial
+segment of $A$ and would contradict the original minimality of $a$.
+Thus $A'=A$.  This test uses $E_0$ and the block after the divider;
+it does \emph{not} include $B$ in the support test.  The remaining
+entries are $C$, and the original index is
+$i=r+|A|+|B|$.  Both the ordering and index have been recovered uniquely.
+
+Finally, $\mathcal B(T,\mathbf e)\subseteq\mathcal B(T_1,\mathbf e)$.
+Taking cardinalities in the injection and using
+\eqref{eq:front-counts} gives
+\[
+ R(T_1,e)-R(T,e)\leq M-R(T_2,e),
+\]
+which is \eqref{eq:anchored-glue}.
+\end{proof}
+
+\begin{remark}[The case of an empty middle list]
+If $B$ is empty, the image has $i=r$: its prefix consists just of the
+root edge.  This value of $i$ is included in $\mathcal B_r(H)$, so
+the map is still defined and its inverse still recovers $A$.
+No pairs need to be discarded in this case.
+\end{remark}
+
+\section{Completing the induction}
+\label{sec:full-master}
+
+We now show that every tight tree can be decomposed into the two cases
+treated above, whatever edge is chosen as the root.  We do this by
+constructing an ordinary tree whose nodes are the hyperedges.  This
+auxiliary tree records how the hyperedges are attached to one another.
+
+\subsection{A tree on the hyperedges}
+
+\begin{lemma}[An auxiliary tree on the edges]
+\label{lem:edge-tree}
+Let $T$ be a tight $r$-tree.  There is a tree $\mathscr T$ whose nodes
+are the hyperedges of $T$ such that:
+\begin{enumerate}[label=\textup{(\roman*)},leftmargin=*]
+\item adjacent nodes correspond to edges meeting in exactly $r-1$ vertices;
+\item for each vertex $x$ of $T$, the nodes whose edges contain $x$
+      form a connected subtree of $\mathscr T$;
+\item after rooting $\mathscr T$ at any node, every parent-before-child
+      ordering is a tight-tree construction order for $T$.
+\end{enumerate}
+The edges indexed by any nonempty connected subtree of $\mathscr T$,
+with their union as vertex set, also form a tight $r$-tree.
+\end{lemma}
+
+\begin{proof}
+Choose a tight-tree construction order $e_1,\ldots,e_m$ and one
+permitted parent $e_{p(j)}$ for each $j\geq2$.  Join $e_j$ to
+$e_{p(j)}$.  Each new node attaches to a preceding node by one edge,
+so these connections form a tree.  The child introduces exactly one
+new vertex, and all its other $r-1$ vertices belong to the parent;
+this proves (i).
+
+To prove (ii), follow the construction.  A vertex first occurs in a
+single node.  Whenever a subsequent edge contains that existing vertex,
+its parent must contain it too, since every child vertex other than the
+newly introduced one belongs to the parent.  The nodes containing that
+vertex therefore remain connected at every step.
+
+Now root $\mathscr T$ at any node and order its nodes with parents
+before children.  Consider a child edge $g$ with parent $f$, and let
+$x$ be the unique vertex of $g\setminus f$.  If $x$ occurred in an
+earlier edge $h$, then $h$ could not be a descendant of $g$, because
+descendants occur after $g$.  The path from $g$ to $h$ would pass
+through $f$.  Property (ii) would force $x\in f$, a contradiction.
+Thus $x$ is new, and $g\setminus\{x\}\subseteq f$ proves (iii).
+
+For a connected subtree, the nodes containing any given vertex are
+again connected whenever nonempty: the unique path between two such
+nodes lies in both the original vertex-subtree and the chosen subtree.
+The same parent-before-child argument proves the final assertion.
+\end{proof}
+
+\begin{lemma}[Decomposition at a distinguished edge]
+\label{lem:edge-decomposition}
+Let $T$ have $m\geq2$ edges and distinguished edge $e$, and root
+$\mathscr T$ from Lemma~\ref{lem:edge-tree} at $e$.
+\begin{enumerate}[label=\textup{(\roman*)},leftmargin=*]
+\item If $e$ has one neighbour $f$ in $\mathscr T$, the vertex of
+      $e\setminus f$ occurs in no other edge of $T$.  Removing $e$
+      and that vertex leaves a tight tree $S$ with $m-1$ edges.
+\item If $e$ has at least two neighbours, $T$ can be written
+      $T_1\cup T_2$, with both $T_j$ smaller tight trees containing
+      $e$, such that
+      \[
+       V(T_1)\cap V(T_2)=e,\qquad e(T_1)+e(T_2)=m+1.
+      \]
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+In (i), if the vertex $x\in e\setminus f$ occurred in another node,
+the path to that node would pass through $f$, contradicting
+property (ii) of Lemma~\ref{lem:edge-tree}.  The remaining nodes form
+a connected subtree, so they
+give a tight tree by Lemma~\ref{lem:edge-tree}.
+
+In (ii), partition the components of $\mathscr T-e$ into two nonempty
+groups and restore $e$ to each group.  Each group with $e$ forms a
+connected subtree, and hence defines a tight tree $T_j$.  If a vertex
+occurs in both groups, property (ii) of Lemma~\ref{lem:edge-tree},
+applied to the path through $e$, forces that vertex to belong to $e$.
+Conversely, both trees contain
+all vertices of $e$.  Their edge sets overlap in exactly the single
+edge $e$, which gives the displayed edge-count identity.  Nonemptiness
+of both groups ensures that each $T_j$ has fewer than $m$ edges.
+\end{proof}
+
+\subsection{The counting inequality}
+
+\begin{theorem}[The main counting inequality]
+\label{thm:anchored-master}
+Let $r\geq2$, let $T$ be a tight $r$-tree with $m\geq1$ edges,
+and distinguish any edge $e$ of $T$.  For every $r$-graph $H$ on
+$n\geq r$ vertices,
+\begin{equation}
+ M\leq R_H(T,e)+(m-1)Q,
+ \label{eq:anchored-master}
+\end{equation}
+where $M$ and $Q$ are given in \eqref{eq:anchored-normalization}.
+\end{theorem}
+
+\begin{proof}
+Induct on $m$, simultaneously for all tight trees and all choices
+of their distinguished edges.  If $m=1$, every marked state supplies
+the prescribed copy of the sole edge, so $R_H(T,e)=M$.
+
+Suppose $m\geq2$ and use the decomposition of
+Lemma~\ref{lem:edge-decomposition}.  If $e$ has one neighbour $f$,
+write $S$ for the remaining tight tree.  The edge $e$ is obtained
+from $f$ by retaining its intersection with $e$ and adjoining the
+vertex of $e$ absent from $S$.  Induction rooted at $f$, followed by
+Lemma~\ref{lem:anchored-leaf}, gives
+\[
+ M\leq R_H(S,f)+(m-2)Q
+   \leq R_H(T,e)+(m-1)Q.
+\]
+
+Otherwise write $T=T_1\cup T_2$ as in part (ii) and put
+$m_j=e(T_j)$.  Add the induction inequalities rooted at $e$ and apply
+Lemma~\ref{lem:anchored-glue}:
+\[
+ \begin{aligned}
+ 2M
+ &\leq R_H(T_1,e)+R_H(T_2,e)+(m_1+m_2-2)Q\\
+ &\leq M+R_H(T,e)+(m-1)Q.
+ \end{aligned}
+\]
+Subtracting $M$ proves \eqref{eq:anchored-master}.  Root-order choices
+made in the leaf step do not change the counts, by
+Lemma~\ref{lem:root-order}.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Write $n=|V(H)|$.  For $n<r$, the host has no edges and the inequality
+is immediate.
+Otherwise distinguish any edge $e$ of $T$.  The forbidden-copy
+hypothesis gives $R_H(T,e)=0$.  Substitute
+\eqref{eq:anchored-normalization} into
+Theorem~\ref{thm:anchored-master} to obtain
+\[
+ r!\,e(H)(n-r+1)!
+ \leq(m-1)(r-1)!\,|\partial H|(n-r+1)!.
+\]
+Division by the positive factorial factor $(r-1)!(n-r+1)!$ gives
+\eqref{eq:main-shadow}.  This includes the one-edge target and the empty
+host: the argument does not divide by $Q$.
+\end{proof}
+
+\section{An example and sharpness}
+\label{sec:examples}
+
+The following example illustrates why the copies must agree on every
+vertex of their common edge.
+
+\begin{example}[Branches through three different pairs]
+\label{ex:three-faces}
+Let $r=3$ and distinguish $e=123$ in the tight tree
+\[
+ E(T)=\{123,124,135,236\}.
+\]
+Write $T_1=\{123,124\}$, $T_2=\{123,135\}$, and
+$T_3=\{123,236\}$, with the vertex sets understood to be their unions.
+For each $j$, start with the single edge other than $123$ and apply
+Lemma~\ref{lem:anchored-leaf}, adding $123$ as the new distinguished edge.
+The new vertices are respectively $3,2,1$, so this gives
+\[
+ R_H(T_j,123)\geq M-Q\qquad(j=1,2,3).
+\]
+Two applications of Lemma~\ref{lem:anchored-glue} yield
+\[
+ R_H(T,123)\geq
+ R_H(T_1,123)+R_H(T_2,123)+R_H(T_3,123)-2M
+ \geq M-3Q.
+\]
+The copies agree on the images of $1,2,3$.  The injection in
+Lemma~\ref{lem:anchored-glue} uses copies whose other vertices lie in
+disjoint parts of the permutation, so their union is a copy of $T$.
+The resulting
+bound for this particular four-edge tree also follows from
+\cite{FJKMV2019}.
+\end{example}
+
+\begin{proposition}[Sharpness of the shadow coefficient]
+For every $r\geq2$, $m\geq2$, and tight $r$-tree $T$ with $m$
+edges, there is a $T$-free $r$-graph attaining equality in
+Theorem~\ref{thm:main}.
+\end{proposition}
+
+\begin{proof}
+Put $s=m+r-2$ and take $H=K_s^{(r)}$.  Since $T$ has
+$m+r-1=s+1$ vertices, it cannot embed in $H$.  Moreover,
+\[
+ r\binom{s}{r}=(s-r+1)\binom{s}{r-1}
+             =(m-1)\binom{s}{r-1}.
+\]
+Here $|\partial H|=\binom{s}{r-1}$, giving the required equality.
+\end{proof}
+
+Disjoint unions of these complete hypergraphs also attain equality in
+the shadow bound: a tight tree is connected, and the edge and shadow
+counts add over the components.  Adding isolated host vertices leaves
+both counts unchanged.
+
+When $r=2$, the shadow consists of the singleton sets corresponding to
+nonisolated vertices.  Theorem~\ref{thm:main} therefore reads
+\[
+ 2e(H)\leq(m-1)|\{v\in V(H):d_H(v)>0\}|,
+\]
+and implies the Erd\H{o}s--S\'os bound.  As explained in the
+introduction, the method is adapted from \cite{Erdos548Repository};
+the graph theorem itself is not used as a black box.
+
+\section{Lean formalization}
+\label{sec:formalization}
+
+The accompanying project in \texttt{lean/} proves the main theorem,
+its binomial consequence, and the counting inequality in Lean~4.19.0.
+It uses Lean's bundled \texttt{Std} library and does not depend on
+Mathlib.  We describe the definitions and their relation to the
+mathematical proof; instructions for checking the files are given in
+\texttt{lean/README.md}.
+
+\subsection{Definitions and theorem statements}
+
+The structure \texttt{FiniteHypergraph} represents a finite simple
+hypergraph by lists of vertices and edges.  The vertex list and each
+edge list are duplicate-free, and no two stored edges are permutations
+of one another.  Edge membership is defined up to permutation, so this
+representation imposes no order-preservation condition on embeddings.
+An \texttt{Embedding} is injective on the listed target vertices and
+maps each target edge to a host edge; nonedges need not be preserved.
+
+The definition \texttt{IsTightTree} is the edge-order definition from
+Section~\ref{sec:introduction}: each edge after the first adds one
+new vertex, and its other vertices lie in an earlier edge.  It also
+requires uniformity and excludes isolated target vertices.  The
+decomposition and counting inequalities are proved, not assumed.
+The parameter $m$ is the number of edges, and the identity
+$|V(T)|=m+r-1$ is also proved in Lean.
+
+The principal declarations are
+\begin{itemize}[leftmargin=*]
+\item \texttt{Kalai.kalai\_master}, corresponding to
+      Theorem~\ref{thm:anchored-master};
+\item \texttt{Kalai.kalai\_shadow\_bound}, corresponding to
+      Theorem~\ref{thm:main};
+\item \texttt{Kalai.kalai\_bound}, corresponding to
+      Corollary~\ref{cor:kalai}; and
+\item \texttt{Kalai.kalai\_contains\_tree}, giving the equivalent
+      embedding conclusion above the binomial threshold.
+\end{itemize}
+The inequalities use natural numbers, with the denominator $r$ cleared.
+The code counts each shadow set once, regardless of how many edges
+contain it.  It defines the binomial coefficient by Pascal's recurrence
+and proves the corresponding subset-counting identity.  The statements
+include empty hosts and hosts with fewer than $r$ vertices.
+
+\subsection{Relation to the proof}
+
+The formal proof establishes the two counting inequalities, the
+injection for joining copies and its inverse, and the formulas for
+$M$ and $Q$.  It also checks that reordering the chosen edge and
+moving the marking edge to the front leave the counts unchanged.
+As in the paper, pairs $(\pi,i)$ are counted once, not once for each
+embedding they admit.
+
+The decomposition argument differs from
+Section~\ref{sec:full-master}.  Rather than construct the auxiliary
+tree on the hyperedges, Lean proves directly that every tight tree,
+with any chosen root edge, can be built from single edges by the
+leaf and joining operations.  This is proved by induction from the
+original edge order, including the steps needed to insert an edge
+at any parent and to change the root.  The result is then used to
+prove the main counting inequality.  The separate proof for paths
+and the auxiliary-tree lemmas are not formalized line by line.
+
+\subsection{Verification}
+
+The project specifies the Lean version and includes the source files
+and a script that compiles them and checks which axioms the theorems
+depend on.  The theorem statements are collected in
+\texttt{lean/Statements.lean}.  The permitted
+logical axioms are \texttt{propext}, \texttt{Classical.choice}, and
+\texttt{Quot.sound}.  Concrete formal tests cover root reorderings,
+branches through different faces, empty hosts, and a sharp graph-path
+example.
+
+\begin{thebibliography}{99}
+
+\bibitem{Kalai1984}
+G.~Kalai,
+Conjecture communicated in 1984, as recorded in
+\cite[Conjecture~3.6 and reference~{[K2]}]{FF1987}.
+
+\bibitem{FF1987}
+P.~Frankl and Z.~F\"uredi,
+\emph{Exact solution of some Tur\'an-type problems},
+J. Combin. Theory Ser. A \textbf{45} (1987), 226--262.
+\href{https://doi.org/10.1016/0097-3165(87)90016-1}
+{doi:10.1016/0097-3165(87)90016-1}.
+
+\bibitem{FJKMV2019}
+Z.~F\"uredi, T.~Jiang, A.~Kostochka, D.~Mubayi, and J.~Verstra\"ete,
+\emph{Hypergraphs not containing a tight tree with a bounded trunk},
+SIAM J. Discrete Math. \textbf{33} (2019), 862--873.
+\href{https://arxiv.org/abs/1712.04081}{arXiv:1712.04081}.
+
+\bibitem{FJKMV2020}
+Z.~F\"uredi, T.~Jiang, A.~Kostochka, D.~Mubayi, and J.~Verstra\"ete,
+\emph{Tight paths in convex geometric hypergraphs},
+Advances in Combinatorics (2020), Paper No.~1, 14 pp.
+\href{https://doi.org/10.19086/aic.12044}{doi:10.19086/aic.12044}.
+\href{https://arxiv.org/abs/2002.09457}{arXiv:2002.09457}, version~2.
+
+\bibitem{BMP2025}
+J.~P. Bright, K.~G. Milans, and J.~Porter,
+\emph{Tur\'an numbers of ordered tight hyperpaths},
+European J. Combin. \textbf{124} (2025), Article 104070.
+\href{https://doi.org/10.1016/j.ejc.2024.104070}{doi:10.1016/j.ejc.2024.104070}.
+\href{https://arxiv.org/abs/2212.13719}{arXiv:2212.13719}.
+
+\bibitem{Stein2024}
+M.~Stein,
+\emph{Kalai's conjecture in $r$-partite $r$-graphs},
+European J. Combin. \textbf{117} (2024), Article 103827.
+\href{https://arxiv.org/abs/1912.11421}{arXiv:1912.11421}.
+
+\bibitem{Erdos548Repository}
+T.~Adamczewski (maintainer),
+\emph{Erd\H{o}s problem \#548: Lean proof and provenance}, 2026.
+\url{https://github.com/tadamcz/erdos548}.
+
+\end{thebibliography}
+\end{document}

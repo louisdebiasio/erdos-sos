@@ -1,0 +1,12 @@
+name = "antidirected"
+version = "0.1.0"
+defaultTargets = ["Digraph", "DigraphTests", "Statements"]
+
+[[lean_lib]]
+name = "Digraph"
+
+[[lean_lib]]
+name = "DigraphTests"
+
+[[lean_lib]]
+name = "Statements"
