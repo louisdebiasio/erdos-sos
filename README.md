@@ -13,7 +13,9 @@ Papers by Louis DeBiasio using ChatGPT 6 Astra.
 **Hypergraphs.** If a finite simple, uniform hypergraph $H$ contains no copy
 of a tight $r$-uniform tree with $m\geq1$ edges, where $r\geq2$, then
 
-$$r\,|E(H)|\leq(m-1)|\partial H|\leq(m-1)\binom{|V(H)|}{r-1}.$$
+```math
+r|E(H)|\leq(m-1)|\partial H|\leq(m-1)\binom{|V(H)|}{r-1}.
+```
 
 Here $\partial H$ is the set of $(r-1)$-subsets contained in host edges.
 The Lean theorem uses the usual fresh-vertex edge-order definition of a tight
@@ -24,7 +26,9 @@ See the [formalization guide](Hypergraphs/lean/README.md).
 **Digraphs.** If a finite loopless digraph $D$ contains no copy of an
 antidirected tree $T$ on $t\geq2$ vertices, then
 
-$$|A(D)|\leq(t-2)|V(D)|.$$
+```math
+|A(D)|\leq(t-2)|V(D)|.
+```
 
 Opposite arcs are allowed. Copies are injective across all target vertices
 and need not be induced. The Lean theorem assumes that the target is
