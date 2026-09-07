@@ -184,43 +184,46 @@ inequality.  Finally, we show that every tight tree can be decomposed
 using these two operations.  The resulting inequality gives the
 claimed bound when the host contains no copy of the tree.
 
-Section~\ref{sec:three} gives the marked-position argument for
-$3$-uniform paths, and Section~\ref{sec:paths-r} treats arbitrary
-uniformity.  Sections~\ref{sec:anchored} and
+Section~\ref{sec:paths-r} gives a self-contained warm-up for tight paths
+in arbitrary uniformity, with a $3$-uniform worked example.
+Sections~\ref{sec:anchored} and
 \ref{sec:anchored-transfers} count copies with a specified edge and
 prove the two counting inequalities.  Section~\ref{sec:full-master}
 completes the induction.
 Section~\ref{sec:examples} records an example and sharpness, and
 Section~\ref{sec:formalization} describes the accompanying formal proof.
 
-\section{Marked positions for tight paths}
-\label{sec:three}
+\section{Warm-up: tight paths}
+\label{sec:paths-r}
 
-We first prove the theorem for $3$-uniform paths.  In this case, the
-injection rearranges just three entries of a permutation.  The main
-point is to use a path that avoids the vertex at the current marked
-position, so that this vertex can extend the path.
+We first prove the theorem for tight paths in arbitrary uniformity.
+The main point is to use a path that avoids the vertex at the current
+marked position, so that this vertex can extend the path.  An
+$r$-cycle of permutation entries then puts the extended path in the
+required form.  Branching will require a stronger support condition
+in Section~\ref{sec:anchored}.
 
 \subsection{Marked permutations}
 
-Fix a $3$-graph $H$ on $n\geq3$ vertices.  For distinct vertices $a,b$,
-write
+Fix $r\geq2$ and an $r$-graph $H$ on $n\geq r$ vertices.  For an
+$(r-1)$-set $F$, write
 \[
- d_H(ab)=|\{z:\{a,b,z\}\in E(H)\}|.
+ d_H(F)=|\{z\notin F:F\cup\{z\}\in E(H)\}|.
 \]
-For a permutation $\pi=(v_1,\ldots,v_n)$ and $3\leq i\leq n$, call
-$(\pi,i)$ \emph{marked} if $\{v_1,v_2,v_i\}\in E(H)$.  Its prefix
+For a permutation $\pi=(v_1,\ldots,v_n)$ and $r\leq i\leq n$, call
+$(\pi,i)$ \emph{marked} if
+$\{v_1,\ldots,v_{r-1},v_i\}\in E(H)$.  Its prefix
 is the vertex set $S_i(\pi)=\{v_1,\ldots,v_i\}$.
 Let $\cO(H)$ be the set of marked states and $M=|\cO(H)|$.
 
 For $k\geq1$, let $\cA_k$ be the set of marked states whose prefixes
 contain a tight $k$-edge path with vertex sequence
 \begin{equation}
- v_1,v_2,y_3,\ldots,y_{k+2}.
+ v_1,\ldots,v_{r-1},y_r,\ldots,y_{k+r-1}.
  \label{eq:rooted-path}
 \end{equation}
-The starting pair is ordered, but the remaining path vertices need not
-occur in the permutation in path order.  Support is an existence
+The starting $(r-1)$-tuple is ordered, but the remaining path vertices
+need not occur in the permutation in path order.  Support is an existence
 condition inside the prefix vertex set.  Each supporting state is
 counted once, independently of the number of witnesses.  Write
 $A_k=|\cA_k|$.
@@ -229,27 +232,29 @@ $A_k=|\cA_k|$.
 \label{lem:normalization}
 With the notation above,
 \begin{equation}
- A_1=M=6e(H)(n-2)!.
+ A_1=M=r!\,e(H)(n-r+1)!.
  \label{eq:normalization}
 \end{equation}
-Let $\cQ$ be the set of permutations whose first pair belongs to
+Let $\cQ$ be the set of permutations whose first $(r-1)$-set belongs to
 $\partial H$.  Then
 \begin{equation}
- Q:=|\cQ|=2|\partial H|(n-2)!.
+ Q:=|\cQ|=(r-1)!\,|\partial H|(n-r+1)!.
  \label{eq:Q}
 \end{equation}
 \end{lemma}
 
 \begin{proof}
-Every marked state supports a one-edge path starting at its first pair,
-so $\cA_1=\cO(H)$.  For each fixed ordered pair $(a,b)$, there are
-$(n-2)!$ permutations starting with $(a,b)$, and each contributes
-$d_H(ab)$ marks.  Each edge contributes to six ordered pairs, giving
+Every marked state supports a one-edge path starting at its first
+$(r-1)$-tuple, so $\cA_1=\cO(H)$.  For each fixed ordering of an
+$(r-1)$-set $F$, there are $(n-r+1)!$ permutations starting with that
+ordering, and each contributes $d_H(F)$ marks.  Each edge contains
+$r$ such sets, each with $(r-1)!$ orders, giving
 \[
- M=(n-2)!\sum_{a\ne b}d_H(ab)=6e(H)(n-2)!.
+ M=(r-1)!(n-r+1)!\sum_{F\in\partial H}d_H(F)
+   =r!\,e(H)(n-r+1)!.
 \]
-Each shadow pair has two orders and each such order can begin
-$(n-2)!$ permutations.  This proves \eqref{eq:Q}.
+Each shadow set has $(r-1)!$ orders and each such order can begin
+$(n-r+1)!$ permutations.  This proves \eqref{eq:Q}.
 \end{proof}
 
 \subsection{Extending a path}
@@ -274,89 +279,95 @@ be its first position in $\cA_k$, and put
 \[
  \cD_k=\{(\pi,i_0(\pi)):\pi\text{ contributes to }\cA_k\}.
 \]
-Such a permutation has a marked position, so its first pair lies in
-$\partial H$.  Hence $|\cD_k|\leq Q$.
+Such a permutation has a marked position, so its first $(r-1)$-set
+lies in $\partial H$.  Hence $|\cD_k|\leq Q$.
 
 We construct an injection $\Phi_k:\cA_k\setminus\cD_k\to\cA_{k+1}$.
 Take a state $(\pi,i)$ in its domain and write
 \[
- \pi=(a,b,W,z,R),\qquad
- W=(v_3,\ldots,v_{i-1}),\quad z=v_i,\quad
+ \pi=(a_1,\ldots,a_{r-1},W,z,R),\qquad
+ W=(v_r,\ldots,v_{i-1}),\quad z=v_i,\quad
  R=(v_{i+1},\ldots,v_n).
 \]
 Since $i>i_0(\pi)$, the prefix $S_{i_0(\pi)}(\pi)$ contains a path
 \[
- a,b,y_3,\ldots,y_{k+2}
+ a_1,\ldots,a_{r-1},y_r,\ldots,y_{k+r-1}
 \]
-and does not contain $z$.  The marking triple $\{z,a,b\}$ extends
-this to a path
+and does not contain $z$.  The marking edge
+$\{z,a_1,\ldots,a_{r-1}\}$ extends this to a path
 \begin{equation}
- z,a,b,y_3,\ldots,y_{k+2}
+ z,a_1,\ldots,a_{r-1},y_r,\ldots,y_{k+r-1}
  \label{eq:extended-path}
 \end{equation}
-with $k+1$ edges.  Indeed, its first edge is $\{z,a,b\}$ and its
-remaining consecutive triples are precisely the old path edges.
+with $k+1$ edges.  Indeed, its first edge is the marking edge and its
+remaining consecutive $r$-sets are precisely the old path edges.
 All vertices remain distinct.
 
 Define
 \begin{equation}
- \Phi_k\bigl((a,b,W,z,R),i\bigr)
-       =\bigl((z,a,W,b,R),i\bigr).
+ \Phi_k\bigl((a_1,\ldots,a_{r-1},W,z,R),i\bigr)
+       =\bigl((z,a_1,\ldots,a_{r-2},W,a_{r-1},R),i\bigr).
  \label{eq:cycle-map}
 \end{equation}
-The new prefix has the same vertex set.  Its first pair is $(z,a)$,
-the starting pair of \eqref{eq:extended-path}, and its last vertex is
-$b$.  Thus its marking triple is still $\{z,a,b\}$.  The image is
-therefore in $\cA_{k+1}$.
+The new prefix has the same vertex set.  Its first $(r-1)$-tuple is
+$(z,a_1,\ldots,a_{r-2})$, the starting tuple of
+\eqref{eq:extended-path}, and its last vertex is $a_{r-1}$.
+Thus its marking edge is still $\{z,a_1,\ldots,a_{r-1}\}$.
+The image is therefore in $\cA_{k+1}$.
 
-The retained index $i$ identifies the displaced entry $b$.
+The retained index $i$ identifies the displaced entry $a_{r-1}$.
 For any image $(\rho,i)$, the unique possible source ordering is
 \begin{equation}
- (\rho_2,\rho_i,\rho_3,\ldots,\rho_{i-1},\rho_1,
+ (\rho_2,\ldots,\rho_{r-1},\rho_i,\rho_r,\ldots,\rho_{i-1},\rho_1,
        \rho_{i+1},\ldots,\rho_n).
  \label{eq:inverse}
 \end{equation}
-This inverse cycle on positions $1,2,i$ recovers the source without
-using the earlier index $i_0(\pi)$ or choosing a path witness.  Hence
-$A_k-|\cD_k|\leq A_{k+1}$ proves \eqref{eq:transfer}.
+This inverse cycle on positions $1,\ldots,r-1,i$ recovers the source
+without using the earlier index $i_0(\pi)$ or choosing a path witness.
+Hence $A_k-|\cD_k|\leq A_{k+1}$ proves \eqref{eq:transfer}.
+When $r=2$, the tuples indexed from $1$ to $r-2$ or from $2$ to
+$r-1$ are empty, and the map simply exchanges the first entry and
+the marked entry.
 \end{proof}
 
 \begin{theorem}[Tight-path shadow bound]
-\label{thm:three}
-For every integer $m\geq1$ and every $P_m^{(3)}$-free $3$-graph $H$,
+\label{thm:path-shadow}
+For all integers $r\geq2$ and $m\geq1$ and every
+$P_m^{(r)}$-free $r$-graph $H$,
 \begin{equation}
- 3e(H)\leq(m-1)|\partial H|.
+ r e(H)\leq(m-1)|\partial H|.
  \label{eq:shadow-bound}
 \end{equation}
 In particular, for an $n$-vertex host,
-$e(H)\leq\frac{m-1}{3}\binom n2$.
+$e(H)\leq\frac{m-1}{r}\binom n{r-1}$.
 \end{theorem}
 
 \begin{proof}
-If $n<3$ there are no edges, so assume $n\geq3$.
+If $n<r$ there are no edges, so assume $n\geq r$.
 Iterating Lemma~\ref{lem:transfer} gives
 \[
- 6e(H)(n-2)!=A_1\leq A_m+(m-1)Q.
+ r!\,e(H)(n-r+1)!=A_1\leq A_m+(m-1)Q.
 \]
 The forbidden-path hypothesis gives $A_m=0$; substitution of
-\eqref{eq:Q} and division by $2(n-2)!$ gives
+\eqref{eq:Q} and division by $(r-1)!(n-r+1)!$ gives
 \eqref{eq:shadow-bound}.  For $m=1$ the iteration is empty and
 $A_1=0$, which gives the same conclusion.  Finally,
-$|\partial H|\leq\binom n2$.
+$|\partial H|\leq\binom n{r-1}$.
 \end{proof}
 
 \subsection{The role of the mark}
 
 The path and the marking edge need not start with the same edge.
 The path only has to lie among the first $i$ vertices and start with
-the ordered pair $(v_1,v_2)$.  The mark supplies another edge through
-that pair.  Moving $z$ to the first position and $b$ to the marked
-position preserves both requirements.  The map does not depend on
+the ordered tuple $(v_1,\ldots,v_{r-1})$.  The mark supplies an edge
+through that tuple, but this edge need not belong to the supported path.
+The cycle in \eqref{eq:cycle-map} preserves the marking edge and puts
+the extended path's starting tuple first.  The map does not depend on
 which path is chosen; the earlier marked position ensures that a path
 avoiding $z$ exists.
 
-\begin{example}
-For five distinct vertices $a,b,c,d,z$, write $abc$ for
+\begin{example}[The map in uniformity three]
+Let $r=3$.  For five distinct vertices $a,b,c,d,z$, write $abc$ for
 $\{a,b,c\}$, and similarly for other edges.  Suppose $H$ contains
 $abc,bcd,zab$, and take
 \[
@@ -375,80 +386,20 @@ uses an earlier supporting \emph{marked state}.
 \end{example}
 
 \begin{remark}[Boundary cases and equality]
-An empty host has $A_k=M=Q=0$.  For $n=3$, every permutation has at
+An edgeless host has $A_k=M=Q=0$.  For $n=r$, every permutation has at
 most one mark, so every supporting pair is discarded.
-For the complete $3$-graph on $s=m+1\geq3$ vertices, there is no
-$P_m^{(3)}$, and
+For the complete $r$-graph on $s=m+r-2\geq r$ vertices, there is no
+$P_m^{(r)}$, and
 \[
- 3\binom{s}{3}=(m-1)\binom{s}{2}.
+ r\binom{s}{r}=(m-1)\binom{s}{r-1}.
 \]
 Thus the coefficient in the shadow bound cannot be reduced.  More
-precisely, every permutation has $s-2$ marks and exactly $s-k-1$
-of them support a $k$-edge path, for $1\leq k\leq s-1$.  Hence
-$A_k=(s-k-1)s!$ and $A_k-A_{k+1}=Q=s!$ throughout the nontrivial
+precisely, every permutation has $s-r+1$ marks and exactly $s-k-r+2$
+of them support a $k$-edge path, for $1\leq k\leq m$.  Hence
+$A_k=(s-k-r+2)s!$ and $A_k-A_{k+1}=Q=s!$ throughout the nontrivial
 iteration.  Adding isolated vertices does not change the shadow or edge
 count and only changes the factorial normalizations.
 \end{remark}
-
-\section{Tight paths in arbitrary uniformity}
-\label{sec:paths-r}
-
-The preceding proof extends by replacing the three-cycle with an
-$r$-cycle of entries.  We give the map explicitly.
-Fix $r\geq2$ and $n\geq r$.  Mark $(\pi,i)$, $i\geq r$, when
-\[
- \{v_1,\ldots,v_{r-1},v_i\}\in E(H).
-\]
-Let $A_k^{(r)}$ count the marked states whose prefixes support a tight
-$k$-edge path starting with the ordered tuple
-$(v_1,\ldots,v_{r-1})$.  The same normalization gives
-\begin{equation}
- A_1^{(r)}=r!\,e(H)(n-r+1)!,\qquad
- Q_r=(r-1)!\,|\partial H|(n-r+1)!.
- \label{eq:r-normalization}
-\end{equation}
-Here $Q_r$ counts permutations whose first $(r-1)$-set belongs to the
-shadow.
-
-Discard the first supporting marked state of each permutation.  At a
-remaining state, write
-\[
- \pi=(a_1,\ldots,a_{r-1},W,z,R).
-\]
-An earlier path beginning $a_1,\ldots,a_{r-1}$ avoids $z$, and
-prepending $z$ adds exactly the marking edge.  Apply
-\begin{equation}
- \bigl((a_1,\ldots,a_{r-1},W,z,R),i\bigr)
- \longmapsto
- \bigl((z,a_1,\ldots,a_{r-2},W,a_{r-1},R),i\bigr).
- \label{eq:r-cycle}
-\end{equation}
-The prefix set and marking $r$-set are unchanged.  The new first
-$(r-1)$-tuple is the starting tuple of the extended path.
-The inverse takes the entries at positions $2,\ldots,r-1,i$ as the
-old root tuple, restores the entry at position $1$ to position $i$,
-and leaves all other entries fixed.  Thus
-\[
- A_k^{(r)}\leq A_{k+1}^{(r)}+Q_r.
-\]
-When $r=2$, the tuple $(a_1,\ldots,a_{r-2})$ is empty and the map
-simply exchanges the first entry and the mark.
-
-\begin{corollary}
-\label{cor:all-r}
-If an $r$-graph $H$ contains no tight path with $m$ edges, then
-\[
- r e(H)\leq(m-1)|\partial H|.
-\]
-Consequently it satisfies Corollary~\ref{cor:kalai}
-for the target $P_m^{(r)}$.
-\end{corollary}
-
-\begin{proof}
-For $n<r$ there are no edges.  Otherwise iterate the preceding
-inequality, use $A_m^{(r)}=0$, and divide
-\eqref{eq:r-normalization} by $(r-1)!(n-r+1)!$.
-\end{proof}
 
 \section{Copies with a specified edge}
 \label{sec:anchored}

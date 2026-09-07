@@ -139,8 +139,10 @@ as sources and sinks, while branches at a vertex share the same role.
 These facts allow the induction to proceed.
 
 Section~\ref{sec:marks} defines the marked pairs and computes their
-number.  Section~\ref{sec:signed-injections} proves the two counting
-inequalities, and Section~\ref{sec:density-proof} completes the
+number.  Section~\ref{sec:path-warmup} gives a separate proof for
+antidirected paths, illustrating the sign-switching reversal.
+Section~\ref{sec:signed-injections} proves the two counting inequalities
+for rooted trees, and Section~\ref{sec:density-proof} completes the
 induction.  The tournament consequence and the Lean formalization
 are given in Sections~\ref{sec:tournaments} and~\ref{sec:lean}.
 
@@ -193,6 +195,129 @@ $(H,h)$.  The copy need not follow the order of the permutation,
 and each pair is counted only once.  When the host is fixed, we write
 $\cO^\varepsilon(H,h)$.  The notation $-\varepsilon$ denotes the sign
 opposite to $\varepsilon$.
+
+\section{Warm-up: antidirected paths}
+\label{sec:path-warmup}
+
+The density bound in Theorem~\ref{thm:path-density} is already known:
+it is a special case of the antidirected-caterpillar theorem of Stein
+and Trujillo-Negrete \cite{SteinTrujilloNegrete2025}.  We give a
+separate permutation-counting proof to illustrate the sign-switching
+mechanism.
+
+For paths rooted at an endpoint, we need only one operation: extend
+an earlier path by the vertex at the current marked position and make
+that vertex the new root.  The root changes from a source to a sink,
+or conversely.  Prefix reversal changes the marking sign in exactly
+the same way.  We prove the path case separately to isolate this
+mechanism before introducing branch joining.
+
+For $k\geq1$ and $\varepsilon\in\{+,-\}$, let $P_k^\varepsilon$ be
+the antidirected path with $k$ arcs, rooted at an endpoint that is a
+source if $\varepsilon=+$ and a sink if $\varepsilon=-$.  Thus the
+vertex sequence starts $x_0\to x_1\leftarrow x_2\to\cdots$ in the
+positive case and $x_0\leftarrow x_1\to x_2\leftarrow\cdots$ in the
+negative case.  Let $A_k^\varepsilon$ count the marked states of sign
+$\varepsilon$ whose prefixes contain a copy of $P_k^\varepsilon$
+rooted at the first vertex.  These are existence counts, not counts
+of embeddings.  Every mark of sign $\varepsilon$ supplies the
+required one-arc path, so
+\begin{equation}
+ A_1^\varepsilon=M^\varepsilon=e(D)(N-1)!.
+ \label{eq:path-base}
+\end{equation}
+
+\begin{lemma}[Extending an antidirected path]
+\label{lem:path-extension}
+For every $k\geq1$ and $\varepsilon\in\{+,-\}$,
+\begin{equation}
+ A_k^\varepsilon\leq A_{k+1}^{-\varepsilon}+N!.
+ \label{eq:path-extension}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For each ordering contributing to $A_k^\varepsilon$, discard its
+first supporting marked state $(\pi,i_0)$.  There are at most $N!$
+discarded states.  At any remaining state $(\pi,i)$, the earlier
+prefix contains $P_k^\varepsilon$ rooted at $v_1$ and avoids $v_i$.
+If $\varepsilon=+$, the marking arc is $v_1\to v_i$; adjoining it
+extends the path with a new sink endpoint $v_i$.  If
+$\varepsilon=-$, the marking arc is $v_i\to v_1$ and the new
+endpoint is a source.  In both cases the extended path, rooted at
+$v_i$, is $P_{k+1}^{-\varepsilon}$.
+
+Reverse the prefix through position $i$:
+\begin{equation}
+ (\pi,i)\longmapsto
+ \bigl((v_i,v_{i-1},\ldots,v_1,v_{i+1},\ldots,v_N),i\bigr).
+ \label{eq:path-reversal}
+\end{equation}
+The prefix vertex set is unchanged, the first vertex is now $v_i$,
+and the marking arc has sign $-\varepsilon$ relative to that vertex.
+The image is therefore counted by $A_{k+1}^{-\varepsilon}$.
+The index $i$ is retained and a second reversal recovers the source,
+so the map is injective.  Adding back the discarded states proves
+\eqref{eq:path-extension}.
+\end{proof}
+
+The reversal changes the ordering, not the directions of any arcs.
+Nor must the supported path follow the permutation order: only its
+root and its containing prefix are prescribed.
+
+\begin{example}[A source endpoint becomes a sink]
+Let $D$ have vertices $a,b,c,d$ and arcs
+\[
+ a\to b,\qquad c\to b,\qquad a\to c,\qquad a\to d.
+\]
+For $\pi=(a,b,c,d)$, position $3$ is a positive mark supporting the
+two-arc path $a\to b\leftarrow c$ rooted at $a$.  The marking arc
+$a\to c$ is not part of that path.  At the later positive mark $4$,
+the earlier copy avoids $d$, so adjoining $a\to d$ gives
+\[
+ d\leftarrow a\to b\leftarrow c.
+\]
+Reversal sends $(\pi,4)$ to $((d,c,b,a),4)$.  The new state is
+negative, with marking arc $a\to d$, and supports the displayed
+three-arc path rooted at its sink endpoint $d$.
+\end{example}
+
+\begin{theorem}[Antidirected-path density bound]
+\label{thm:path-density}
+Let $P$ be any antidirected path on $t\geq2$ vertices.  If a digraph
+$D$ contains no copy of $P$, then
+\[
+ e(D)\leq(t-2)|V(D)|.
+\]
+\end{theorem}
+
+\begin{proof}
+The empty host is immediate, so put $N=|V(D)|\geq1$.  We claim that
+for every $k\geq1$ and each sign $\varepsilon$,
+\begin{equation}
+ e(D)(N-1)!\leq A_k^\varepsilon+(k-1)N!.
+ \label{eq:path-counting}
+\end{equation}
+The case $k=1$ is \eqref{eq:path-base}.  For $k>1$, apply the
+inductive inequality with sign $-\varepsilon$, followed by
+Lemma~\ref{lem:path-extension}, to obtain
+\[
+ e(D)(N-1)!
+ \leq A_{k-1}^{-\varepsilon}+(k-2)N!
+ \leq A_k^\varepsilon+(k-1)N!.
+\]
+This proves the claim.  Choose an endpoint of $P$ and let
+$\varepsilon$ be its source or sink sign.  Since $D$ is $P$-free,
+$A_{t-1}^\varepsilon=0$.  Taking $k=t-1$ in
+\eqref{eq:path-counting} and dividing by $(N-1)!$ proves the bound.
+\end{proof}
+
+The coefficient is sharp: a complete symmetric digraph on $t-1$
+vertices has $(t-1)(t-2)$ arcs and cannot contain $P$.
+The same sign-switching reversal will add a leaf to an arbitrary
+rooted oriented tree in Lemma~\ref{lem:signed-leaf}.  The extra
+operation needed for general antidirected trees is joining branches
+at a common root, which we develop next.
 
 \section{Joining copies and adding a leaf}
 \label{sec:signed-injections}
@@ -270,8 +395,10 @@ of $T_1$, taking cardinalities yields
 which is \eqref{eq:signed-branch}.
 \end{proof}
 
-We next add a leaf and make it the new root.  Reversing the prefix
-interchanges the first and marked vertices.  The marking arc itself
+We next add a leaf and make it the new root, using the same
+construction as in Lemma~\ref{lem:path-extension}, now for an arbitrary
+rooted oriented tree.  Reversing the prefix interchanges the first
+and marked vertices.  The marking arc itself
 does not change, but its sign does: an arc entering the old root
 leaves the new root, and conversely.
 
@@ -467,7 +594,9 @@ marked vertices rather than reversing the whole prefix.  Both maps
 preserve the prefix vertex set, change the sign of the mark, and are
 their own inverses for each fixed marked position.  The proof of
 Lemma~\ref{lem:signed-branch} uses the same shortest marked prefix
-as the paper.  The tournament corollary has not been formalized.
+as the paper.  The path density bound is a special case of the
+formalized general theorem; the separate warm-up proof has not been
+formalized line by line.  The tournament corollary has not been formalized.
 
 \subsection{Verification}
 
