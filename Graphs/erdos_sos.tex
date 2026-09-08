@@ -60,9 +60,12 @@ recorded in \cite{AdamczewskiBloom2026,Erdos548Repository}.
 This paper expounds the marked-position argument in the Lean proof of
 Erd\H{o}s problem~548 produced by GPT-6 Astra in the FrontierMath
 Erd\H{o}s benchmark \cite{AdamczewskiBloom2026,Erdos548Repository}.
-The theorem and the underlying proof are due to that work; the purpose
-here is to present the finite counting argument in conventional
-mathematical form.
+The proof presented here is due to that work; the purpose of this exposition
+is to present its finite counting argument in conventional mathematical form.
+The conjecture itself is due to Paul Erd\H{o}s and Vera T.~S\'os.
+It appears in Erd\H{o}s's 1964 paper \cite[p.~30]{Erdos1964}, where he
+explicitly attributes it jointly to S\'os and himself; the paper is authored
+by Erd\H{o}s alone.
 
 All graphs in this note are finite and simple, and a copy need not be
 induced.  We use $t$ for the number of vertices of the target tree.
@@ -88,7 +91,13 @@ less cooperative.  Deleting low-degree vertices guarantees only a nonempty
 subgraph of minimum degree at least roughly half the average degree, losing
 the factor of two that matters here.  Much of the earlier literature is
 devoted to recovering that loss by understanding the structure of the host
-graph or of the target tree.
+graph or of the target tree.  For example, Besomi, Pavez-Sign\'e, and
+Stein \cite{BesomiPavezSigneStein2021} proved the conjecture for bounded-degree
+trees in large dense host graphs.  Pokrovskiy \cite{Pokrovskiy2024} proved a
+structural hyperstability theorem for graphs excluding a bounded-degree tree,
+and applied it to establish the conjecture for sufficiently large
+bounded-degree trees without a density restriction on the host.
+These results provide background; neither is used as a black box below.
 
 The new proof never constructs a single embedding greedily.  Instead, it
 runs a rooted embedding test simultaneously through every ordering of
@@ -590,15 +599,37 @@ T.~Adamczewski and T.~F. Bloom,
 See in particular Appendix~B.4 and the accompanying FrontierMath Erd\H{o}s
 benchmark materials, \url{https://epoch.ai/files/frontiermath-erdos.pdf}.
 
+\bibitem{BesomiPavezSigneStein2021}
+G.~Besomi, M.~Pavez-Sign\'e, and M.~Stein,
+\emph{On the Erd\H{o}s--S\'os conjecture for trees with bounded degree},
+Combin. Probab. Comput. \textbf{30} (2021), no.~5, 741--761.
+\href{https://arxiv.org/abs/1906.10219}{arXiv:1906.10219}.
+
+\bibitem{Erdos1964}
+P.~Erd\H{o}s,
+\emph{Extremal problems in graph theory},
+in \emph{Theory of Graphs and its Applications}
+(Proc. Sympos. Smolenice, 1963),
+Publishing House of the Czechoslovak Academy of Sciences, Prague, 1964,
+29--36.  The joint conjecture with V.~T.~S\'os is stated on p.~30.
+\href{https://users.renyi.hu/~p_erdos/1964-06.pdf}{Original paper}.
+
 \bibitem{ErdosGallai1959}
 P.~Erd\H{o}s and T.~Gallai,
 \emph{On maximal paths and circuits of graphs},
 Acta Math. Acad. Sci. Hungar. \textbf{10} (1959), 337--356.
+\href{https://users.renyi.hu/~p_erdos/1959-10.pdf}{Original paper}.
 
 \bibitem{Erdos548Repository}
 T.~Adamczewski,
 \emph{Erd\H{o}s problem \#548: Lean proof and provenance}, 2026.
 \url{https://github.com/tadamcz/erdos548}.
+
+\bibitem{Pokrovskiy2024}
+A.~Pokrovskiy,
+\emph{Hyperstability in the Erd\H{o}s--S\'os Conjecture},
+preprint, 2024.
+\href{https://arxiv.org/abs/2409.15191}{arXiv:2409.15191}.
 
 \end{thebibliography}
 \end{document}
